@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双语电子书生成系统 · 低保真原型</title>
+<style>
+  :root { --ink:#222; --line:#bbb; --bg:#f5f5f2; --panel:#fff; --accent:#33557a; --warn:#8a5a00; --err:#8a2222; --ok:#2a6a3a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Noto Sans SC","PingFang SC",sans-serif; background:var(--bg); color:var(--ink); }
+  header { background:#2c3e50; color:#fff; padding:10px 16px; display:flex; align-items:center; gap:16px; }
+  header .logo { font-weight:700; }
+  nav a { color:#cfd8e3; text-decoration:none; margin-right:14px; padding:4px 8px; border:1px solid transparent; }
+  nav a.active, nav a:hover { color:#fff; border-color:#cfd8e3; }
+  main { max-width:860px; margin:20px auto 60px; padding:0 12px; }
+  .page { display:none; }
+  .page.show { display:block; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px; margin-bottom:14px; }
+  h1 { font-size:20px; } h2 { font-size:16px; margin:0 0 10px; }
+  .hint { color:#666; font-size:13px; }
+  .filebtn { display:block; width:100%; text-align:left; border:2px dashed var(--line); background:#fafafa; border-radius:8px; padding:26px; font-size:15px; cursor:pointer; margin-bottom:10px; }
+  .filebtn:hover { border-color:var(--accent); }
+  select, button.primary { font-size:14px; padding:8px 10px; border-radius:6px; }
+  select { border:1px solid var(--line); background:#fff; }
+  button.primary { background:var(--accent); color:#fff; border:none; cursor:pointer; padding:10px 18px; }
+  button.ghost { background:#fff; border:1px solid var(--line); border-radius:6px; padding:8px 14px; cursor:pointer; font-size:14px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
+  .kv { display:grid; grid-template-columns:110px 1fr; gap:6px 12px; font-size:14px; }
+  .kv b { font-weight:600; }
+  .badge { display:inline-block; border:1px solid var(--line); border-radius:4px; padding:1px 8px; font-size:12px; margin-left:6px; }
+  .badge.low { border-color:var(--warn); color:var(--warn); }
+  .badge.ok { border-color:var(--ok); color:var(--ok); }
+  .alert { border:1px solid; border-radius:6px; padding:10px 12px; font-size:14px; margin:10px 0; }
+  .alert.warn { border-color:var(--warn); background:#fff8ec; color:var(--warn); }
+  .alert.err { border-color:var(--err); background:#fdf0f0; color:var(--err); }
+  .alert.ok { border-color:var(--ok); background:#eef7f0; color:var(--ok); }
+  .bar { height:18px; border:1px solid var(--line); border-radius:4px; overflow:hidden; background:#eee; }
+  .bar > i { display:block; height:100%; background:repeating-linear-gradient(45deg,var(--accent),var(--accent) 8px,#4a6b93 8px,#4a6b93 16px); transition:width .3s; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { border:1px solid var(--line); padding:8px; text-align:left; }
+  th { background:#eceae6; font-weight:600; }
+  .toc { font-size:13px; color:#666; }
+  footer { text-align:center; color:#999; font-size:12px; padding:16px; }
+  .dl { display:inline-block; border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:6px 12px; margin-right:8px; cursor:pointer; font-size:13px; background:#fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">双语电子书生成系统</span>
+  <nav>
+    <a id="nav-home" href="javascript:void(0)" onclick="goHome()">首页 · 上传</a>
+    <a id="nav-history" href="javascript:void(0)" onclick="show('p4')">历史记录</a>
+  </nav>
+  <span style="margin-left:auto;font-size:12px;color:#cfd8e3">低保真原型 · 示例数据</span>
+</header>
+
+<main>
+  <!-- ============ P0 首页：上传与语言选择 ============ -->
+  <section class="page" id="p0">
+    <div class="card">
+      <h1>上传一本书</h1>
+      <p class="hint">支持 .txt / .epub / .pdf（文本型）。原型使用示例文件，点击下方按钮模拟选择文件。</p>
+      <button class="filebtn" onclick="pickFile('english.txt','English',1)">📄 english-novel.txt　（示例：英文小说）</button>
+      <button class="filebtn" onclick="pickFile('story.epub','English',1)">📗 story.epub　（示例：EPUB 电子书）</button>
+      <button class="filebtn" onclick="pickFile('mixed-sample.pdf','Mixed',0)">📕 mixed-sample.pdf　（示例：语言混杂、识别低置信）</button>
+      <button class="filebtn" onclick="failDirect('scanned-book.pdf')">📕 scanned-book.pdf　（示例：扫描版 PDF，无法提取文本）</button>
+      <button class="filebtn" onclick="failDirect('report.docx')">📄 report.docx　（示例：不支持的格式）</button>
+    </div>
+
+    <div class="card" id="langcard" style="display:none">
+      <h2>语言设置</h2>
+      <div class="kv">
+        <b>文件名</b><span id="f-name">—</span>
+        <b>原文语言</b><span>自动识别：<b id="f-detected">—</b> <span id="f-conf"></span>
+          <select id="src-lang" onchange="onSrcChange()" style="margin-left:8px">
+            <option value="auto">自动识别</option><option>中文</option><option>英语</option>
+            <option>日语</option><option>韩语</option><option>法语</option><option>德语</option>
+          </select>
+        </span>
+        <b>目标语言</b><span>
+          <select id="tgt-lang"><option>中文</option><option>英语</option><option>日语</option><option>韩语</option><option>法语</option><option>德语</option></select>
+        </span>
+      </div>
+      <div class="alert warn" id="lowconf" style="display:none">
+        ⚠ 自动识别置信度较低（示例：识别为“混合语言”）。“混合语言”不是受支持的原文语言，不能直接开始处理——请在右侧下拉框明确选择一个受支持的原文语言（中文/英语/日语/韩语/法语/德语）后再开始。
+      </div>
+      <div class="row">
+        <button class="primary" onclick="startTask()">开始处理</button>
+        <button class="ghost" onclick="resetP0()">重新选择文件</button>
+      </div>
+    </div>
+
+    <div class="card toc" id="returning" style="display:none">
+      <h2 id="returning-title">进行中的任务</h2>
+      <p class="hint" id="returning-text">你之前提交的任务仍在处理（【原型模拟】：按保存的任务状态与经过时间推算进度，非真实后台服务）。<button class="ghost" id="returning-btn" onclick="show('p1')">查看任务状态</button></p>
+    </div>
+
+    <details class="card toc">
+      <summary>页面结构（原型导航说明）</summary>
+      <p>P0 上传与语言选择（本页）→ P1 处理进度；P2 处理失败（文件校验失败 / 任务失败）；P3 生成成功与下载；P4 历史记录（常驻入口，支持重新下载）。示例数据，不接真实翻译服务或后端。</p>
+    </details>
+  </section>
+
+  <!-- ============ P1 处理进度 ============ -->
+  <section class="page" id="p1">
+    <div class="card">
+      <h1 id="t-title">正在处理：<span id="t-name">—</span></h1>
+      <div class="alert warn" id="sim-banner">【原型模拟】本进度由浏览器本地模拟推进，仅为原型演示，不是真实后台服务。</div>
+      <p class="hint">（产品需求）任务在后台运行，你可以离开页面；回来后可在“进行中的任务”中查看状态。（原型中“后台运行”为模拟效果）</p>
+      <div class="kv">
+        <b>语言对</b><span id="t-lang">—</span>
+        <b>进度</b><span id="t-progress">0/0 段</span>
+      </div>
+      <div class="bar" style="margin:12px 0"><i id="t-bar" style="width:0%"></i></div>
+      <div class="row">
+        <button class="ghost" onclick="simulateReturn()">模拟：关闭网页后回来</button>
+        <button class="ghost" onclick="simulateFail()">模拟：任务失败</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ P2 处理失败 ============ -->
+  <section class="page" id="p2">
+    <div class="card">
+      <h1>处理失败</h1>
+      <div class="alert err" id="err-box">—</div>
+      <div class="hint" id="err-suggest">—</div>
+      <div class="row">
+        <button class="primary" id="retry-btn" onclick="retry()">重新提交</button>
+        <button class="ghost" onclick="goHome()">返回首页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ P3 生成成功与下载 ============ -->
+  <section class="page" id="p3">
+    <div class="card">
+      <h1>处理完成</h1>
+      <div class="alert ok">双语电子书已生成（示例数据，译文为占位文本）。已写入历史记录。</div>
+      <div class="kv">
+        <b>书名</b><span id="d-name">—</span>
+        <b>语言对</b><span id="d-lang">—</span>
+        <b>排版</b><span>宽屏左原右译 / 窄屏上下对照（P8 待定，原型示意）</span>
+        <b>失败单元</b><span id="d-fail">2 段（已保留原文并标记，示例）</span>
+      </div>
+      <div class="row">
+        <span class="dl" onclick="fakeDl('epub')">下载 EPUB</span>
+        <span class="dl" onclick="fakeDl('pdf')">下载 PDF</span>
+      </div>
+      <div class="row">
+        <button class="primary" onclick="show('p4')">查看历史记录</button>
+        <button class="ghost" onclick="goHome()">再处理一本</button>
+      </div>
+    </div>
+    <details class="card">
+      <summary>排版示意（对照块，示例数据）</summary>
+      <div class="kv">
+        <span style="grid-column:1/3">第 3 章（示例章节标题保留）</span>
+        <b>原文</b><span>“The fog rolled in from the harbor at dusk.”</span>
+        <b>译文</b><span>【示例译文】黄昏时分，雾从港口漫了进来。</span>
+        <b>原文</b><span>“She locked the door and waited.” <span class="badge">翻译失败 · 保留原文</span></span>
+        <b>译文</b><span>—（该单元保留原文，示例）</span>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ P4 历史记录 ============ -->
+  <section class="page" id="p4">
+    <div class="card">
+      <h1>历史记录</h1>
+      <p class="hint">展示处理过的书籍（字段：书名、语言对、生成时间、状态）。归属粒度（设备/账号）见需求文档 P3，原型未体现。</p>
+      <table id="hist-table">
+        <thead><tr><th>书名</th><th>语言对</th><th>生成时间</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>低保真可点击原型 · 示例数据 · 不接真实翻译服务或后端 · 配套需求文档：需求分析与设计文档说明.md</footer>
+
+<script>
+const LANGS = { 'Chinese':'中文','English':'英语','Japanese':'日语','Korean':'韩语','French':'法语','German':'德语','Mixed':'混合语言（低置信）' };
+let task = { running:false, cur:0, total:500, name:'', src:'', tgt:'' };
+let curFile = null, curDetected = '', curConf = 1;
+let retryFn = null;
+
+const $ = id => document.getElementById(id);
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
+  $(id).classList.add('show');
+  $('nav-home').classList.toggle('active', id==='p0');
+  $('nav-history').classList.toggle('active', id==='p4');
+  if(id==='p1') enterTaskPage();
+  if(id==='p4') renderHistory();
+}
+// 按"保存状态 + 经过时间"推算任务是否已在模拟中完成（与 enterTaskPage 同一速率口径）
+function projectedDone(t){
+  if(!t || t.state!=='running') return false;
+  const elapsed = Math.max(0, Date.now() - (t.updatedAt || Date.now()));
+  const jumped = Math.floor(elapsed / 700 * 30);
+  return (t.cur || 0) + jumped >= t.total;
+}
+function goHome(){
+  show('p0');
+  const t = readTask();
+  const done = t && (t.state==='done' || projectedDone(t));
+  if(t && t.state==='running' && !done){
+    $('returning').style.display = 'block';
+    $('returning-title').textContent = '进行中的任务';
+    $('returning-text').innerHTML = '你之前提交的任务仍在处理（【原型模拟】：按保存的任务状态与经过时间推算进度，非真实后台服务）。<button class="ghost" onclick="show(\'p1\')">查看任务状态</button>';
+  } else if(done){
+    $('returning').style.display = 'block';
+    $('returning-title').textContent = '已完成的生成';
+    $('returning-text').innerHTML = '《' + t.name + '》（' + t.src + ' → ' + t.tgt + '）的双语电子书已生成（【原型模拟】：按保存的任务状态与经过时间推算为已完成，非真实后台服务）。<button class="ghost" onclick="show(\'p1\')">查看已完成结果</button>';
+  } else {
+    $('returning').style.display = 'none';
+  }
+}
+// 进入任务页：按“保存的任务状态 + 离开期间经过的时间”推算模拟进度（仅为原型模拟，无真实后台服务）
+function enterTaskPage(){
+  const t = readTask();
+  if(!t) return;
+  if(t.state==='done'){
+    // 刷新/重开后任务已完成：从保存状态恢复结果页
+    task = { running:false, cur:t.total, total:t.total, name:t.name, src:t.src, tgt:t.tgt, startedAt:t.startedAt };
+    $('sim-banner').textContent = '【原型模拟】按保存的任务状态恢复：该示例任务已完成（非真实后台服务）。';
+    $('t-name').textContent = t.name;
+    $('t-lang').textContent = t.src + ' → ' + t.tgt;
+    updateBar(); renderResult();
+    return;
+  }
+  if(t.state!=='running') return;
+  task = { running:true, cur:t.cur, total:t.total, name:t.name, src:t.src, tgt:t.tgt, startedAt:t.startedAt };
+  const elapsed = Math.max(0, Date.now() - (t.updatedAt || Date.now()));
+  const jumped = Math.floor(elapsed / 700 * 30); // 按原模拟速率（每 700ms 约 30 段）推算离开期间进度
+  if(jumped > 0){
+    task.cur = Math.min(task.total, task.cur + jumped);
+    writeTask({ state: task.cur>=task.total?'done':'running', name:task.name, src:task.src, tgt:task.tgt,
+                cur:task.cur, total:task.total, startedAt:task.startedAt, updatedAt:Date.now() });
+  }
+  $('sim-banner').textContent = task.cur >= task.total
+    ? '【原型模拟】按保存的任务状态与经过时间推算，该示例任务已在模拟中完成（非真实后台服务）。'
+    : '【原型模拟】任务进度按“保存状态 + 经过时间”推算，仅为原型模拟，不是真实后台服务。';
+  if(task.cur >= task.total){ renderResult(); return; }
+  $('t-name').textContent = task.name;
+  $('t-lang').textContent = task.src + ' → ' + task.tgt;
+  updateBar();
+  tick();
+}
+function pickFile(name, lang, conf){
+  curFile = name; curDetected = lang; curConf = conf;
+  $('langcard').style.display = 'block';
+  $('f-name').textContent = name;
+  $('f-detected').textContent = LANGS[lang] || lang;
+  const low = conf < 1;
+  $('f-conf').innerHTML = low ? '<span class="badge low">低置信</span>' : '<span class="badge ok">高置信</span>';
+  $('lowconf').style.display = low ? 'block' : 'none';
+  $('src-lang').value = 'auto';
+}
+function onSrcChange(){ $('lowconf').style.display = 'none'; }
+function resetP0(){ $('langcard').style.display='none'; curFile=null; }
+
+function startTask(){
+  const srcSel = $('src-lang').value;
+  if(srcSel==='auto' && curConf < 1){
+    // 低置信/混合语言不能作为原文语言：必须明确选择受支持的原文语言
+    $('lowconf').style.display = 'block';
+    alert('自动识别结果不确定（示例：混合语言）。请选择一个受支持的原文语言（中文/英语/日语/韩语/法语/德语）后再开始处理。');
+    return;
+  }
+  const src = srcSel==='auto' ? (LANGS[curDetected]||curDetected) : srcSel;
+  const tgt = $('tgt-lang').value;
+  if(src===tgt){ alert('示例提示：原文语言与目标语言相同，请修改其中一项。'); return; }
+  task = { running:true, cur:0, total:500, name:curFile, src, tgt, startedAt:Date.now() };
+  writeTask({ state:'running', name:curFile, src, tgt, cur:0, total:500, startedAt:Date.now(), updatedAt:Date.now() });
+  $('t-name').textContent = curFile;
+  $('t-lang').textContent = src + ' → ' + tgt;
+  $('sim-banner').textContent = '【原型模拟】本进度由浏览器本地模拟推进，仅为原型演示，不是真实后台服务。';
+  show('p1');
+  tick();
+}
+let timer = null;
+function stopTick(){ if(timer){ clearTimeout(timer); timer=null; } }
+function tick(){
+  if(!task.running) return;
+  if(timer !== null){ clearTimeout(timer); timer = null; } // 守卫：同时只允许一个模拟计时器；定时器触发或重复进入进度页时先清除旧计时器，不叠加、不加速
+  task.cur += Math.floor(20 + Math.random()*40);
+  if(task.cur >= task.total){
+    task.cur = task.total; task.running = false;
+    if(timer){ clearTimeout(timer); timer=null; }
+    updateBar(); renderResult();
+    writeTask({ state:'done', name:task.name, src:task.src, tgt:task.tgt,
+                cur:task.total, total:task.total, startedAt:task.startedAt, updatedAt:Date.now() });
+    addHistory(task.name, task.src+' → '+task.tgt, new Date().toLocaleString('zh-CN'));
+    return;
+  }
+  updateBar();
+  writeTask({ state:'running', name:task.name, src:task.src, tgt:task.tgt, cur:task.cur, total:task.total,
+              startedAt:task.startedAt, updatedAt:Date.now() });
+  timer = setTimeout(tick, 700);
+}
+function updateBar(){
+  $('t-bar').style.width = (task.cur/task.total*100).toFixed(1)+'%';
+  $('t-progress').textContent = task.cur + '/' + task.total + ' 段（示例进度单位：翻译单元；P5 待定）';
+}
+function simulateReturn(){
+  if(timer){ clearTimeout(timer); timer=null; }
+  task.running = false;
+  writeTask({ state:'running', name:task.name, src:task.src, tgt:task.tgt, cur:task.cur, total:task.total,
+              startedAt:task.startedAt, updatedAt:Date.now() });
+  goHome();
+}
+function simulateFail(){
+  if(timer){ clearTimeout(timer); timer=null; }
+  task.running = false;
+  writeTask({ state:'failed', name:task.name, updatedAt:Date.now() });
+  setFail('翻译服务持续不可用（示例：模拟 API 超时且重试耗尽）。任务已停止，已完成的进度未保留为结果。',
+           '可操作建议：稍后重新提交；或稍后重试。注意：原型未实现失败后自动断点续做（需求文档 P1 明确不承诺该能力）。');
+  retryFn = startTask;
+  show('p2');
+}
+function failDirect(file){
+  if(file.endsWith('.docx')){
+    setFail('不支持的文件格式：.docx。本系统支持 .txt / .epub / .pdf（文本型）。',
+            '请转换文件格式后重新上传。');
+  } else {
+    setFail('无法从该 PDF 提取有效正文：内容疑似扫描版（图片型）PDF。',
+            '本项目拟定的提示文案（P6 方案 a 示意）：当前版本暂不支持扫描版 PDF（OCR 为后续评估的优化候选，未承诺）。请上传文本型 PDF、EPUB 或 TXT。');
+  }
+  retryFn = goHome;
+  $('retry-btn').textContent = file.endsWith('.docx') ? '重新选择文件' : '重新选择文件';
+  show('p2');
+}
+function setFail(msg, suggest){
+  $('err-box').textContent = msg;
+  $('err-suggest').textContent = suggest;
+}
+function retry(){ const f = retryFn || goHome; f(); }
+
+function renderResult(){
+  $('d-name').textContent = task.name;
+  $('d-lang').textContent = task.src + ' → ' + task.tgt;
+  show('p3');
+}
+function fakeDl(kind){ alert('示例：下载双语电子书.' + kind + '（原型不产生真实文件）'); }
+
+// 历史记录（示例数据 + 本次会话新增；持久化于 localStorage 仅作原型演示）
+function histKey(){ return 'bilingual_proto_history_v1'; }
+function seedHistory(){
+  if(localStorage.getItem(histKey())) return;
+  localStorage.setItem(histKey(), JSON.stringify([
+    { name:'english-novel.txt', lang:'英语 → 中文', time:'2026-09-20 14:02', status:'已完成' },
+    { name:'essay.epub', lang:'德语 → 中文', time:'2026-09-18 09:31', status:'已完成' }
+  ]));
+}
+function addHistory(name, lang, time){
+  const h = JSON.parse(localStorage.getItem(histKey())||'[]');
+  h.unshift({ name, lang, time, status:'已完成' });
+  localStorage.setItem(histKey(), JSON.stringify(h));
+}
+function renderHistory(){
+  const h = JSON.parse(localStorage.getItem(histKey())||'[]');
+  const tb = $('hist-table').querySelector('tbody');
+  tb.innerHTML = h.map(r=>'<tr><td>'+r.name+'</td><td>'+r.lang+'</td><td>'+r.time+'</td><td>'+r.status+'</td>'+
+    '<td><span class="dl" onclick="fakeDl(\'epub\')">EPUB</span><span class="dl" onclick="fakeDl(\'pdf\')">PDF</span></td></tr>').join('');
+}
+// 任务状态（模拟“关闭网页后任务继续”：状态写在 localStorage，刷新/重开页面后可见）
+function taskKey(){ return 'bilingual_proto_task_v1'; }
+function writeTask(t){ localStorage.setItem(taskKey(), JSON.stringify(t)); }
+function readTask(){ try{ return JSON.parse(localStorage.getItem(taskKey())); }catch(e){ return null; } }
+
+seedHistory();
+goHome();
+show('p0');
+</script>
+</body>
+</html>

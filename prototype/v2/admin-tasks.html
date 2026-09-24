@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>任务 / 失败记录 · 译伴后台</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar admin-topbar">
+  <div class="wrap">
+    <a class="admin-brand" href="admin.html">
+      <span class="seal">管</span>
+      <b>译伴 · 管理后台</b>
+      <span class="tag">独立入口</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="admin.html">概览</a>
+      <a href="admin-tasks.html" class="active">任务 / 失败</a>
+      <a href="admin-reviews.html">举报 / 审核</a>
+      <a href="admin-login.html" onclick="return adminLogout()" style="cursor:pointer">退出</a>
+    </nav>
+    <span class="spacer"></span>
+    <div class="admin-user"><span class="av">管</span><span>管理员</span></div>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单" style="border-color:#2c465e;background:#17293a"><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span></button>
+  </div>
+</header>
+<div id="mobile-nav" class="admin">
+  <a href="admin.html">概览</a>
+  <a href="admin-tasks.html" class="active">任务 / 失败</a>
+  <a href="admin-reviews.html">举报 / 审核</a>
+  <div class="mn-foot"><a href="admin-login.html" onclick="return adminLogout()" style="font-size:13px;color:#7f95a8;cursor:pointer">退出（模拟）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+  <div class="wrap">
+
+    <div class="sim-bar" style="margin-bottom:22px">
+      <span>◆ 任务/失败数据为<b>原型模拟</b>示例，不接后端。</span>
+      <span class="sim-tag" style="margin-left:auto">首个真实里程碑管理端优先覆盖此项（P14 设计假设）</span>
+    </div>
+
+    <div class="page-head">
+      <div><h1>任务 / 失败记录</h1><div class="sub">全量任务、失败原因、资源用量（只读运维视角，G11）。</div></div>
+      <span class="spacer"></span>
+      <span class="badge b-muted">只读 · 运维视角</span>
+    </div>
+
+    <!-- 资源用量 -->
+    <div class="grid grid-4" style="margin-bottom:24px">
+      <div class="card stat"><div class="k">今日任务</div><div class="v">34</div></div>
+      <div class="card stat gold"><div class="k">翻译调用（万字符）</div><div class="v">12.6</div></div>
+      <div class="card stat"><div class="k">成功率（近7日）</div><div class="v">91<small>%</small></div></div>
+      <div class="card stat"><div class="k">平均处理时长</div><div class="v">3.2<small> 分</small></div></div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap" style="border:none;border-radius:0">
+        <table class="tbl">
+          <thead><tr><th>任务</th><th>用户</th><th>语言对</th><th>进度</th><th>状态</th><th>失败原因</th><th>时间</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b style="color:var(--ink)">T-2044</b></td><td>林一舟 <span class="muted" style="color:var(--faint);font-size:12px">u_88</span></td>
+              <td>英语 → 中文</td><td>500/500 段</td>
+              <td><span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>已完成</span></td>
+              <td><span class="muted" style="color:var(--faint)">—</span></td><td class="muted" style="color:var(--faint);font-size:13px">2026-09-24 10:02</td>
+            </tr>
+            <tr>
+              <td><b style="color:var(--ink)">T-2041</b></td><td>陈叙 <span class="muted" style="color:var(--faint);font-size:12px">u_52</span></td>
+              <td>德语 → 中文</td><td>182/460 段</td>
+              <td><span class="badge b-err"><span class="dot" style="background:var(--err)"></span>失败</span></td>
+              <td style="font-size:13px;color:var(--err)">翻译服务超时，重试耗尽（E6）</td><td class="muted" style="color:var(--faint);font-size:13px">2026-09-24 09:02</td>
+            </tr>
+            <tr>
+              <td><b style="color:var(--ink)">T-2039</b></td><td>苏晚 <span class="muted" style="color:var(--faint);font-size:12px">u_14</span></td>
+              <td>英语 → 中文</td><td>—</td>
+              <td><span class="badge b-err"><span class="dot" style="background:var(--err)"></span>失败</span></td>
+              <td style="font-size:13px;color:var(--err)">文件无法解析 / 损坏（E2）</td><td class="muted" style="color:var(--faint);font-size:13px">2026-09-23 21:47</td>
+            </tr>
+            <tr>
+              <td><b style="color:var(--ink)">T-2036</b></td><td>林一舟 <span class="muted" style="color:var(--faint);font-size:12px">u_88</span></td>
+              <td>英语 → 中文</td><td>300/500 段</td>
+              <td><span class="badge b-run"><span class="dot" style="background:var(--ink-2)"></span>处理中</span></td>
+              <td><span class="muted" style="color:var(--faint)">—</span></td><td class="muted" style="color:var(--faint);font-size:13px">2026-09-23 18:15</td>
+            </tr>
+            <tr>
+              <td><b style="color:var(--ink)">T-2031</b></td><td>周砚 <span class="muted" style="color:var(--faint);font-size:12px">u_33</span></td>
+              <td>法语 → 中文</td><td>500/500 段</td>
+              <td><span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>已完成</span></td>
+              <td><span class="muted" style="color:var(--faint)">—</span></td><td class="muted" style="color:var(--faint);font-size:13px">2026-09-23 14:20</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="alert alert-info" style="margin-top:18px">
+      <span class="ic">ⓘ</span>
+      <span>失败任务不保留为结果、不承诺自动断点续做（P1）。管理员在此仅做运维查看；对用户的可操作建议（重试/换文件）由用户端任务详情给出（E6）。</span>
+    </div>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  function adminLogout(){ V2.clearAuth(); location.href='admin-login.html'; return false; }
+  if (!V2.requireAdmin()) {}
+</script>
+</body>
+</html>

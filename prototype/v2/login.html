@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 · 译伴 BilingualPress</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="seal">译</span>
+      <span><span class="name">译伴 BilingualPress</span><span class="sub">双语阅读伴侣</span></span>
+    </a>
+    <span class="spacer"></span>
+    <a class="btn btn-ghost btn-sm" href="index.html">← 返回首页</a>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单"><span></span><span></span><span></span></button>
+  </div>
+</header>
+<div id="mobile-nav">
+  <a href="index.html">首页</a>
+  <a href="login.html" class="active">登录 / 注册</a>
+  <div class="mn-foot"><a href="admin-login.html" style="font-size:13px;color:var(--faint)">管理端入口（独立）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main>
+  <div class="auth">
+    <!-- 左侧品牌艺术区 -->
+    <div class="art">
+      <div class="seal">译</div>
+      <h2>让每一页，<br>都有另一门语言陪伴。</h2>
+      <p>登录后，你的书籍、任务、下载与阅读记录都归属到你的账号，可在任何已登录的设备找回。</p>
+      <div class="quote">"原文与译文逐段对照，是最贴近语言学习的双语阅读方式。"</div>
+    </div>
+
+    <!-- 右侧表单 -->
+    <div class="form-side">
+      <div class="form-card">
+        <a class="back" href="index.html">← 返回首页</a>
+        <h1 style="font-size:1.7rem;margin-bottom:4px">登录</h1>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:22px">欢迎回来，继续你的双语阅读。</p>
+
+        <div class="sim-bar" style="margin-bottom:20px">
+          <span>⚠ 本原型登录为<b>模拟</b>：不校验真实密码、不接后端，登录态仅存于本地浏览器。</span>
+        </div>
+
+        <form id="login-form" onsubmit="return doLogin(event)">
+          <div class="field">
+            <label for="mail">邮箱</label>
+            <input class="input" id="mail" type="email" value="yizhou@example.com" autocomplete="username">
+            <div class="hint-line">示例账号（设计阶段再定注册字段与验证策略，P12 待确认）</div>
+          </div>
+          <div class="field">
+            <label for="pwd">密码</label>
+            <input class="input" id="pwd" type="password" value="••••••••" autocomplete="current-password">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">登录</button>
+        </form>
+
+        <div class="divider">或</div>
+        <button class="btn btn-ghost btn-block" type="button" onclick="demoLogin()">以示例账号登录（模拟）</button>
+
+        <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--muted)">
+          还没有账号？<a class="link" href="register.html">立即注册</a>
+        </p>
+        <p style="text-align:center;margin-top:6px;font-size:12.5px;color:var(--faint)">
+          管理员请使用<a class="link gold" href="admin-login.html">独立管理入口</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  function afterLogin() {
+    V2.setUser();
+    location.href = 'dashboard.html';
+  }
+  function doLogin(e) {
+    e.preventDefault();
+    afterLogin();
+    return false;
+  }
+  function demoLogin() { afterLogin(); }
+</script>
+</body>
+</html>
