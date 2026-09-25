@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>任务详情 · 译伴 BilingualPress</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="stylesheet" href="topbar.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="译伴 首页">
+      <span class="seal-mark">译</span>
+      <span class="mark-cn">译伴</span>
+    </a>
+    <nav class="nav">
+      <a href="dashboard.html">工作台</a>
+      <a href="new-task.html">创建任务</a>
+      <a href="library.html">我的书库</a>    </nav>
+    <span class="spacer"></span>
+    <div class="acct" hidden>
+      <button class="acct-btn" id="acct-btn" type="button" aria-haspopup="true" aria-expanded="false">
+        <span class="av" id="u-av">样</span>
+        <span class="acct-meta">
+          <span class="u-name" id="u-name">示例用户</span>
+          <span class="u-mail" id="u-mail">yizhou@example.com</span>
+        </span>
+        <span class="caret" aria-hidden="true"></span>
+      </button>
+      <div class="acct-menu" id="acct-menu" role="menu" hidden>
+        <p class="acct-head">当前模拟账号</p>
+        <p class="acct-mail" id="acct-mail">yizhou@example.com</p>
+        <button class="acct-item" type="button" role="menuitem" onclick="logout()">退出登录（模拟）</button>
+      </div>
+    </div>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+</header>
+<div id="mobile-nav">
+  <a href="dashboard.html">工作台</a>
+  <a href="new-task.html">创建任务</a>
+  <a href="library.html">我的书库</a>
+  <div class="mn-foot"><a href="#" onclick="logout();return false;">退出登录（模拟）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+  <div class="wrap-narrow">
+
+    <div class="sim-bar" style="margin-bottom:22px">
+      <span>◆ 任务进度为<b>原型模拟</b>：按“保存状态 + 经过时间”推算，非真实后台服务。</span>
+    </div>
+
+    <a class="link" href="dashboard.html" style="display:inline-flex;margin-bottom:14px">← 返回工作台</a>
+
+    <!-- 处理中 -->
+    <div class="card" id="run-block" style="display:none">
+      <div class="detail-head">
+        <div style="flex:1;min-width:200px">
+          <div class="meta-row" style="margin-bottom:8px"><span class="badge b-run"><span class="dot" style="background:var(--ink-2)"></span>处理中</span></div>
+          <h1 id="r-name">—</h1>
+          <div class="meta-row"><span class="badge b-muted" id="r-lang">—</span></div>
+        </div>
+      </div>
+      <p style="color:var(--muted);font-size:14px;margin:6px 0 18px">任务在后台运行，你可以离开页面；回来后仍可查看状态与结果（原型中“后台运行”为模拟效果）。</p>
+      <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-bottom:14px">
+        <div class="ring gold" id="r-ring" style="--pct:0"><div class="ring-txt"><b>0%</b><span>处理中</span></div></div>
+        <div style="flex:1;min-width:220px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="bar gold" style="flex:1"><i id="r-bar" style="width:0%"></i></div>
+            <span style="font-size:14px;color:var(--ink);font-weight:600;white-space:nowrap" id="r-progress">0/0 段（示例进度单位）</span>
+          </div>
+          <div class="meta-row" style="margin-top:10px" id="r-phases">
+            <span class="badge b-run">正文提取</span>
+            <span class="badge b-muted">分段对齐</span>
+            <span class="badge b-muted">翻译</span>
+            <span class="badge b-muted">双语排版</span>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="simLeave()">模拟：关闭网页后回来</button>
+        <button class="btn btn-danger" onclick="simFail()">模拟：任务失败</button>
+      </div>
+    </div>
+
+    <!-- 失败 -->
+    <div class="card" id="fail-block" style="display:none">
+      <h1>处理失败</h1>
+      <div class="alert alert-err" id="fail-box" style="margin:14px 0"></div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px" id="fail-suggest"></div>
+      <div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="retry()">重新提交</button>
+        <button class="btn btn-ghost" onclick="location.href='new-task.html'">换一本文件</button>
+        <button class="btn btn-ghost" onclick="location.href='dashboard.html'">返回工作台</button>
+      </div>
+    </div>
+
+    <!-- 完成 -->
+    <div class="card" id="done-block" style="display:none">
+      <div class="alert alert-ok" style="margin-bottom:18px"><span class="ic">✓</span><span>双语电子书已生成（示例数据，译文为占位）。已写入个人书库。</span></div>
+      <h1 id="d-name">—</h1>
+      <div class="meta-row" style="margin:10px 0 22px"><span class="badge b-muted" id="d-lang">—</span></div>
+      <div class="ornament">对照示意 · 示例数据</div>
+      <div class="cmp"><div><h4>原文</h4><div class="c-src">“The fog rolled in from the harbor at dusk.”</div></div><div><h4>译文</h4><div class="c-tgt">黄昏时分，雾从港口漫了进来。</div></div></div>
+      <div class="cmp"><div><h4>原文</h4><div class="c-src">“She locked the door and waited.” <span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span></div></div><div><h4>译文</h4><div class="c-tgt">—（该单元保留原文，示例）</div></div></div>
+      <div class="row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px">
+        <a class="btn btn-primary" id="d-open" href="reader.html">打开双语阅读 →</a>
+        <button class="btn btn-gold" onclick="fakeDl('epub')">下载 EPUB</button>
+        <button class="btn btn-ghost" onclick="fakeDl('pdf')">下载 PDF</button>
+        <button class="btn btn-ghost" onclick="location.href='library.html'">查看书库</button>
+      </div>
+    </div>
+
+    <!-- 空任务 -->
+    <div class="card" id="empty-block" style="display:none">
+      <div class="empty"><div class="glyph">🕊️</div><h3>暂无任务</h3><p>你还没有创建生成任务。</p><a class="btn btn-gold" href="new-task.html">＋ 创建任务</a></div>
+    </div>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script src="topbar.js"></script>
+<script>
+  var timer = null;
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function fakeDl(k){ alert('示例：下载双语电子书.'+k+'（原型不产生真实文件）'); }
+
+  function addLibraryIfNew(t) {
+    var lib = V2.read(V2.K.library, []);
+    if (lib.some(function(b){ return b.name === t.name && b.src === t.src && b.tgt === t.tgt; })) return;
+    lib.unshift({ id:'b'+Date.now(), name:t.name, src:t.src, tgt:t.tgt, time:new Date().toLocaleString('zh-CN'), status:'done' });
+    V2.write(V2.K.library, lib);
+  }
+
+  function showBlock(id) {
+    ['run-block','fail-block','done-block','empty-block'].forEach(function(x){
+      document.getElementById(x).style.display = (x===id)?'block':'none';
+    });
+  }
+
+  function renderDone(t) {
+    document.getElementById('d-name').textContent = t.name;
+    document.getElementById('d-lang').textContent = t.src + ' → ' + t.tgt;
+    var lib = V2.read(V2.K.library, []);
+    var match = lib.filter(function(b){ return b.name===t.name && b.src===t.src && b.tgt===t.tgt; })[0];
+    document.getElementById('d-open').href = 'reader.html' + (match ? '?id='+match.id : '');
+    showBlock('done-block');
+  }
+
+  // 阶段时间线：正文提取 → 分段对齐 → 翻译 → 双语排版（按进度区间点亮，示例口径）
+  var PHASES = [
+    { key:'extract', label:'正文提取', to:15 },
+    { key:'align',   label:'分段对齐', to:30 },
+    { key:'trans',   label:'翻译',     to:90 },
+    { key:'layout',  label:'双语排版', to:100 }
+  ];
+  function updatePhases(pct) {
+    var box = document.getElementById('r-phases');
+    if (!box) return;
+    box.innerHTML = PHASES.map(function (ph) {
+      var cls = pct >= ph.to ? 'b-ok' : (pct > (ph.to * 0.4) ? 'b-run' : 'b-muted');
+      var mark = pct >= ph.to ? '✓ ' : '';
+      return '<span class="badge '+cls+'">'+mark+ph.label+'</span>';
+    }).join('');
+  }
+  function paintRun(t) {
+    var pct = Math.min(100, t.cur / t.total * 100);
+    V3.setRing(document.getElementById('r-ring'), pct, 'gold');
+    document.getElementById('r-bar').style.width = pct.toFixed(1)+'%';
+    document.getElementById('r-progress').textContent = t.cur+'/'+t.total+' 段（示例进度单位）';
+    updatePhases(pct);
+  }
+
+  function tick() {
+    var t = V2.getTask();
+    if (!t || t.state !== 'running') { if(timer){clearInterval(timer);timer=null;} return; }
+    t.cur += Math.floor(20 + Math.random()*40);
+    if (t.cur >= t.total) {
+      t.cur = t.total; t.state = 'done'; t.updatedAt = Date.now();
+      V2.setTask(t);
+      if(timer){clearInterval(timer);timer=null;}
+      addLibraryIfNew(t);
+      renderDone(t);
+      return;
+    }
+    t.updatedAt = Date.now(); V2.setTask(t);
+    paintRun(t);
+  }
+
+  function renderRun(t) {
+    document.getElementById('r-name').textContent = t.name;
+    document.getElementById('r-lang').textContent = t.src + ' → ' + t.tgt;
+    // 按“保存状态 + 经过时间”推算离开期间进度
+    var elapsed = Math.max(0, Date.now() - (t.updatedAt || Date.now()));
+    var jumped = Math.floor(elapsed / 700 * 30);
+    if (jumped > 0 && t.cur < t.total) {
+      t.cur = Math.min(t.total, t.cur + jumped);
+      if (t.cur >= t.total) { t.state='done'; t.updatedAt=Date.now(); V2.setTask(t); addLibraryIfNew(t); renderDone(t); return; }
+      t.updatedAt = Date.now(); V2.setTask(t);
+    }
+    showBlock('run-block');
+    paintRun(t);
+    if (timer) clearInterval(timer);
+    timer = setInterval(tick, 700);
+  }
+
+  function renderFail(t) {
+    document.getElementById('fail-box').innerHTML = '<span class="ic">✕</span><span>'+esc(t.failMsg || '翻译服务持续不可用（示例：模拟 API 超时且重试耗尽）。任务已停止，已完成的进度未保留为结果。')+'</span>';
+    document.getElementById('fail-suggest').textContent = '可操作建议：稍后重新提交。注意：本原型不实现失败后自动断点续做（需求 P1 明确不承诺该能力）。';
+    showBlock('fail-block');
+  }
+
+  function simLeave() { if(timer){clearInterval(timer);timer=null;} location.href='dashboard.html'; }
+  function simFail() {
+    if(timer){clearInterval(timer);timer=null;}
+    var t = V2.getTask();
+    t.state='failed'; t.updatedAt=Date.now(); V2.setTask(t);
+    renderFail(t);
+  }
+  function retry(){ V2.setTask({ state:'running', name:V2.getTask().name, src:V2.getTask().src, tgt:V2.getTask().tgt, cur:0, total:500, startedAt:Date.now(), updatedAt:Date.now() }); render(V2.getTask()); }
+
+  function render(t) {
+    if (!t) { showBlock('empty-block'); return; }
+    if (t.state==='running') renderRun(t);
+    else if (t.state==='done') renderDone(t);
+    else if (t.state==='failed') renderFail(t);
+    else showBlock('empty-block');
+  }
+
+  // 守卫 + 用户名 + 渲染
+  if (V2.requireUser()) {
+    var u = V2.read(V2.K.user, {});
+    document.getElementById('u-name').textContent = u.name;
+    document.getElementById('u-mail').textContent = u.mail;
+    document.getElementById('u-av').textContent = (u.name||'').charAt(0);
+    render(V2.getTask());
+  }
+  window.addEventListener('beforeunload', function(){ if(timer){clearInterval(timer);timer=null;} });
+</script>
+</body>
+</html>

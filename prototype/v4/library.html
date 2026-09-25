@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的书库 · 译伴 BilingualPress</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="stylesheet" href="topbar.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="译伴 首页">
+      <span class="seal-mark">译</span>
+      <span class="mark-cn">译伴</span>
+    </a>
+    <nav class="nav">
+      <a href="dashboard.html">工作台</a>
+      <a href="new-task.html">创建任务</a>
+      <a href="library.html">我的书库</a>    </nav>
+    <span class="spacer"></span>
+    <div class="acct" hidden>
+      <button class="acct-btn" id="acct-btn" type="button" aria-haspopup="true" aria-expanded="false">
+        <span class="av" id="u-av">样</span>
+        <span class="acct-meta">
+          <span class="u-name" id="u-name">示例用户</span>
+          <span class="u-mail" id="u-mail">yizhou@example.com</span>
+        </span>
+        <span class="caret" aria-hidden="true"></span>
+      </button>
+      <div class="acct-menu" id="acct-menu" role="menu" hidden>
+        <p class="acct-head">当前模拟账号</p>
+        <p class="acct-mail" id="acct-mail">yizhou@example.com</p>
+        <button class="acct-item" type="button" role="menuitem" onclick="logout()">退出登录（模拟）</button>
+      </div>
+    </div>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+</header>
+<div id="mobile-nav">
+  <a href="dashboard.html">工作台</a>
+  <a href="new-task.html">创建任务</a>
+  <a href="library.html">我的书库</a>
+  <div class="mn-foot"><a href="#" onclick="logout();return false;">退出登录（模拟）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+  <div class="wrap">
+
+    <div class="sim-bar" style="margin-bottom:22px">
+      <span>◆ 书库记录<b>归属到当前登录用户</b>（模拟）；换设备/换账号不可见。重新下载、阅读均为原型模拟。</span>
+    </div>
+
+    <div class="page-head">
+      <div><h1>我的书库</h1><div class="sub">你处理过的书籍，可重新下载、再次阅读（字段：书名 / 语言对 / 生成时间 / 状态）。</div></div>
+      <span class="spacer"></span>
+      <a class="btn btn-gold" href="new-task.html">＋ 创建任务</a>
+    </div>
+
+    <!-- 筛选（G3：历史可再找到） -->
+    <div class="card" style="margin-bottom:20px;padding:16px 18px">
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+        <div style="flex:1;min-width:200px">
+          <input class="input" id="lib-q" type="search" placeholder="按书名搜索…" oninput="render()">
+        </div>
+        <div style="min-width:150px">
+          <select class="input" id="lib-lang" onchange="render()">
+            <option value="">全部原文语言</option>
+            <option>英语</option><option>中文</option><option>德语</option>
+            <option>日语</option><option>韩语</option><option>法语</option>
+          </select>
+        </div>
+        <span class="badge b-muted" id="lib-count" style="white-space:nowrap">共 0 本</span>
+      </div>
+    </div>
+
+    <div class="table-wrap" id="lib-table-wrap">
+      <table class="tbl">
+        <thead><tr><th>书名</th><th>语言对</th><th>生成时间</th><th>状态</th><th style="text-align:right">操作</th></tr></thead>
+        <tbody id="lib-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="lib-empty" style="display:none;margin-top:20px">
+      <div class="empty"><div class="glyph">📚</div><h3>书库还是空的</h3><p>完成的书籍会出现在这里，可随时重新下载或再次阅读。</p><a class="btn btn-jade" href="new-task.html">＋ 创建第一本书</a></div>
+    </div>
+    <div class="card" id="lib-nomatch" style="display:none;margin-top:20px">
+      <div class="empty"><div class="glyph">🔍</div><h3>没有匹配的书籍</h3><p>换个关键词或清除语言筛选试试。</p><button class="btn btn-ghost" onclick="clearFilter()">清除筛选</button></div>
+    </div>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script src="topbar.js"></script>
+<script>
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function fakeDl(k){ alert('示例：重新下载双语电子书.'+k+'（原型不产生真实文件；内容与首次生成一致，兜底下载链接失效 E7）'); }
+  function clearFilter(){
+    document.getElementById('lib-q').value = '';
+    document.getElementById('lib-lang').value = '';
+    render();
+  }
+
+  function render() {
+    if (!V2.requireUser()) return;
+    var u = V2.read(V2.K.user, {});
+    document.getElementById('u-name').textContent = u.name;
+    document.getElementById('u-mail').textContent = u.mail;
+    document.getElementById('u-av').textContent = (u.name||'').charAt(0);
+
+    var lib = V2.read(V2.K.library, []);
+    var q = (document.getElementById('lib-q').value || '').trim().toLowerCase();
+    var lang = document.getElementById('lib-lang').value;
+    var filtered = lib.filter(function(b){
+      var okQ = !q || (b.name||'').toLowerCase().indexOf(q) !== -1;
+      var okL = !lang || b.src === lang;
+      return okQ && okL;
+    });
+
+    var body = document.getElementById('lib-body');
+    var empty = document.getElementById('lib-empty');
+    var nomatch = document.getElementById('lib-nomatch');
+    var tableWrap = document.getElementById('lib-table-wrap');
+    document.getElementById('lib-count').textContent = '共 ' + filtered.length + ' 本';
+
+    if (lib.length === 0) {
+      body.innerHTML=''; empty.style.display='block'; nomatch.style.display='none'; tableWrap.style.display='none';
+      return;
+    }
+    empty.style.display='none';
+    if (filtered.length === 0) {
+      body.innerHTML=''; nomatch.style.display='block'; tableWrap.style.display='none';
+      return;
+    }
+    nomatch.style.display='none'; tableWrap.style.display='';
+    body.innerHTML = filtered.map(function(b){
+      return '<tr>' +
+        '<td><b style="color:var(--ink)">'+esc(b.name)+'</b></td>' +
+        '<td>'+esc(b.src)+' → '+esc(b.tgt)+'</td>' +
+        '<td><span class="muted" style="color:var(--faint);font-size:13px">'+esc(b.time)+'</span></td>' +
+        '<td><span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>已完成</span></td>' +
+        '<td style="text-align:right;white-space:nowrap">' +
+          '<a class="link" href="reader.html?id='+b.id+'" style="margin-right:14px">阅读</a>' +
+          '<a class="link" href="javascript:void(0)" onclick="fakeDl(\'epub\')" style="margin-right:14px">EPUB</a>' +
+          '<a class="link gold" href="javascript:void(0)" onclick="fakeDl(\'pdf\')">PDF</a>' +
+        '</td></tr>';
+    }).join('');
+  }
+  render();
+</script>
+</body>
+</html>

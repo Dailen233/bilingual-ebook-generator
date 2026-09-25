@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>字标与主标题比稿 · 译伴</title>
+<style>
+@font-face { font-family:"MSZ Title"; src:url("assets/fonts/mashanzheng-title.woff2") format("woff2"); font-display:block; }
+@font-face { font-family:"ZMX Title"; src:url("assets/fonts/zhimangxing-title.woff2") format("woff2"); font-display:block; }
+@font-face { font-family:"LXGW Mark"; src:url("assets/fonts/lxgw-wenkai-mark.woff2") format("woff2"); font-display:block; }
+@font-face { font-family:"MSZ Mark"; src:url("assets/fonts/mashanzheng-mark.woff2") format("woff2"); font-display:block; }
+@font-face { font-family:"BP Serif SC"; src:url("assets/fonts/noto-serif-sc-semibold.woff2") format("woff2"); font-display:swap; }
+@font-face { font-family:"BP Sans SC"; src:url("assets/fonts/noto-sans-sc-regular.woff2") format("woff2"); font-display:swap; }
+:root { --paper:#f7f4ec; --page:#fffdf8; --ink:#16303f; --ink-2:#2c4c63; --jade:#1f5b4a;
+  --jade-2:#2f7a63; --gold:#a87c2e; --gold-2:#c9a04a; --muted:#5f6b70; --faint:#8b959a;
+  --line:#dcd7ca; --line-2:#c5bfb0; --serif:"BP Serif SC",Georgia,serif; --sans:"BP Sans SC","PingFang SC",system-ui,sans-serif; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--text,#232a2e); font-family:var(--sans); line-height:1.7; }
+.wrap { max-width:1140px; margin:0 auto; padding:0 28px; }
+</style>
+</head>
+<body>
+<style>
+.lab-h { font-family:var(--serif); color:var(--ink); font-size:1.5rem; margin:56px 0 6px; }
+.lab-sub { color:var(--muted); font-size:14.5px; margin:0 0 20px; }
+.lab-card { background:var(--page); border:1px solid var(--line); border-radius:14px; padding:28px; margin-bottom:22px; }
+.lab-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+.bigsvg { width:100%; max-width:460px; height:auto; display:block; margin:0 auto; }
+.zoom { border:1px dashed var(--line-2); border-radius:10px; overflow:hidden; background:#fff; }
+.zoom svg { display:block; }
+.navmock { display:flex; align-items:center; gap:12px; background:var(--paper-2,#efeade);
+  border:1px solid var(--line); border-radius:10px; padding:10px 16px; margin-top:18px;
+  flex-wrap:nowrap; overflow:hidden; white-space:nowrap; }
+.navmock > * { flex-shrink:0; }
+.navmock .lbl { margin-left:auto; font-size:12px; color:var(--faint); }
+.wm-note { font-size:13.5px; color:var(--muted); margin:14px 0 0; }
+/* 字标试排：中文主字 + 拉丁副名，均为真实排版锁定，不使用色块包裹 */
+.mark { display:inline-flex; align-items:flex-end; color:var(--ink); }
+.mark .cn { font-size:64px; line-height:1; }
+.mark .lat { font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--faint); font-family:var(--sans); }
+.markA .cn { font-family:"LXGW Mark",var(--serif); letter-spacing:.14em; padding-left:.14em; }
+.markA .rule { display:block; height:1px; background:var(--gold-2); margin:10px 0 8px; width:100%; }
+.markA { display:block; }
+.markB .cn { font-family:"MSZ Mark",var(--serif); letter-spacing:.02em; }
+.markB .cn .b2 { font-size:.86em; }
+.markB .sep { width:1px; height:48px; align-self:flex-end; background:var(--line-2); margin:0 14px 6px; }
+.markB .side { display:flex; flex-direction:column; gap:5px; align-items:flex-start; }
+.markB .side .lat { letter-spacing:.18em; }
+.navmark { display:inline-flex; align-items:center; color:var(--ink); height:22px; }
+.navmark .cn { font-size:16px; line-height:1; }
+.navmark.A .cn { font-family:"LXGW Mark",var(--serif); letter-spacing:.1em; }
+.navmark.B .cn { font-family:"MSZ Mark",var(--serif); letter-spacing:.01em; }
+.navmark.B .cn .b2 { font-size:.86em; }
+.fallback .cn { font-family:var(--serif); letter-spacing:.1em; }
+.hero-mock { background:radial-gradient(900px 420px at 50% -10%, #fff 0%, transparent 70%), var(--paper);
+  border:1px solid var(--line); border-radius:14px; padding:64px 32px 56px; text-align:center; }
+.hero-mock .eyebrow { display:inline-block; font-size:12.5px; font-weight:700; letter-spacing:.3em;
+  color:var(--gold); text-transform:uppercase; }
+.hero-mock h1 { font-weight:400; margin:22px 0 0; line-height:1.22; }
+.hero-mock h1 .l1, .hero-mock h1 .l2 { display:block; }
+.hero-mock h1 .l2 { padding-left:.6em; }
+.hero-mock .lead { font-family:var(--sans); font-size:16.5px; color:var(--muted); max-width:560px;
+  margin:20px auto 26px; }
+.btn-gold { display:inline-block; background:var(--gold-2); color:#1b2430; font-weight:700;
+  font-size:15px; padding:12px 26px; border-radius:10px; text-decoration:none; }
+.cover-table { width:100%; border-collapse:collapse; font-size:14px; }
+.cover-table td, .cover-table th { border-bottom:1px solid var(--line); padding:8px 10px; text-align:left; }
+.ok { color:var(--jade); font-weight:700; }
+.bad { color:#9a3a2e; font-weight:700; }
+@media (max-width:700px) {
+  .lab-grid { grid-template-columns:1fr; }
+  .hero-mock { padding:44px 20px; }
+  .navmock .lbl { display:none; }
+  .mark .cn { font-size:52px; }
+}
+</style>
+<main class="wrap">
+<h1 class="lab-h" style="font-size:1.9rem;margin-top:44px">字标与主标题比稿</h1>
+<p class="lab-sub">品牌「译伴」· 主标题固定两行「一纸书文」「两境言说」（不显示标点）· 本页仅为比稿，未改动正式首页</p>
+
+<h2 class="lab-h">一 · 字标方案</h2>
+<p class="lab-sub">两方案改用真实开源字体字形（不再手绘 SVG，也不再使用色块包裹单字），
+差异在于字体气质、字号主从、字距与图文结构。两款字体均已子集化本地引用，许可为 SIL OFL 1.1。</p>
+
+<div class="lab-grid">
+  <div class="lab-card">
+    <h3 style="font-family:var(--serif);margin:0 0 4px">方案 一 · 文楷平置</h3>
+    <p class="lab-sub" style="margin:0 0 20px">霞鹜文楷 · 两字等大平置 · 字距 0.14em · 下方金色细线与字宽等长，拉丁副名左对齐</p>
+    <div class="mark markA">
+      <span class="cn">译伴</span>
+      <span class="rule"></span>
+      <span class="lat">BilingualPress</span>
+    </div>
+    <div class="navmock">
+      <span class="navmark A"><span class="cn">译伴</span></span>
+      <span style="font-size:13px;color:var(--faint)">工作台</span>
+      <span style="font-size:13px;color:var(--faint)">我的书库</span>
+      <span class="lbl">导航实际尺寸（16px）</span>
+    </div>
+    <p class="wm-note">图文关系：字标自成一组——中文主字在上，金线分隔，拉丁副名在下，形成三层纵向节奏；
+    没有任何底衬色块。用于导航时只保留中文两字。</p>
+  </div>
+  <div class="lab-card">
+    <h3 style="font-family:var(--serif);margin:0 0 4px">方案 二 · 笔楷主从</h3>
+    <p class="lab-sub" style="margin:0 0 20px">马善政毛笔楷书 · 主字「译」大、「伴」收至 0.86 并齐底 · 字距 0.02em · 拉丁副名竖栏右置，以细线分隔</p>
+    <div class="mark markB">
+      <span class="cn">译<span class="b2">伴</span></span>
+      <span class="sep"></span>
+      <span class="side"><span class="lat">Bilingual</span><span class="lat">Press</span></span>
+    </div>
+    <div class="navmock">
+      <span class="navmark B"><span class="cn">译<span class="b2">伴</span></span></span>
+      <span style="font-size:13px;color:var(--faint)">工作台</span>
+      <span style="font-size:13px;color:var(--faint)">我的书库</span>
+      <span class="lbl">导航实际尺寸（16px）</span>
+    </div>
+    <p class="wm-note">图文关系：两字不等大，笔势连贯，向右以细竖线分出拉丁副名栏，形成横向主从结构；
+    与方案一的居中式三层结构明显不同。</p>
+  </div>
+</div>
+
+<h3 class="lab-h" style="font-size:1.1rem;margin-top:26px">字体不可用时的回退演示</h3>
+<p class="lab-sub">下面一行刻意剥离子集字体（只留 Noto Serif SC 与系统衬线栈），用于确认字体加载失败时字标仍完整可读、不缺字、不出现豆腐块。</p>
+<div class="lab-card fallback" style="display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+  <span style="display:inline-flex;align-items:baseline;gap:10px">
+    <span class="cn" style="font-size:64px;line-height:1;font-family:var(--serif);letter-spacing:.1em">译伴</span>
+    <span class="lat" style="font-size:11px;letter-spacing:.28em;color:var(--faint)">BilingualPress</span>
+  </span>
+  <span class="navmark fallback" style="margin-left:auto">
+    <span class="cn" style="font-size:16px;font-family:var(--serif);letter-spacing:.1em">译伴</span>
+  </span>
+</div>
+<h2 class="lab-h">二 · 主标题试排（固定文案，一字未改）</h2>
+<p class="lab-sub">显示文字为两行「一纸书文」/「两境言说」，均不含任何标点；第二行右移半字形成阶梯。
+左栏 Ma Shan Zheng 为已选方案，右侧 Zhi Mang Xing 仅作对照、不再继续优化。</p>
+
+<div class="lab-grid">
+  <div class="lab-card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 20px;border-bottom:1px solid var(--line);font-size:13.5px">
+      <b>已选：Ma Shan Zheng</b>（马善政毛笔楷书 · Google Fonts 官方 · OFL 1.1）
+    </div>
+    <div class="hero-mock" style="border:none;border-radius:0">
+      <span class="eyebrow">Bilingual Ebook Studio</span>
+      <h1 style="font-family:'MSZ Title',cursive;font-size:clamp(2.6rem,5.6vw,4.2rem)">
+        <span class="l1">一纸书文</span>
+        <span class="l2">两境言说</span>
+      </h1>
+      <p class="lead">上传 TXT / EPUB / 文本型 PDF，AI 逐段翻译，生成原文与译文逐段对照的双语电子书，可导出 EPUB 与 PDF。</p>
+      <a class="btn-gold" href="../v3/login.html">开始使用</a>
+    </div>
+  </div>
+  <div class="lab-card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 20px;border-bottom:1px solid var(--line);font-size:13.5px">
+      试排 2 · <b>Zhi Mang Xing</b>（志莽行书 · Google Fonts 官方 · OFL 1.1）
+    </div>
+    <div class="hero-mock" style="border:none;border-radius:0">
+      <span class="eyebrow">Bilingual Ebook Studio</span>
+      <h1 style="font-family:'ZMX Title',cursive;font-size:clamp(2.6rem,5.6vw,4.2rem)">
+        <span class="l1">一纸书文</span>
+        <span class="l2">两境言说</span>
+      </h1>
+      <p class="lead">上传 TXT / EPUB / 文本型 PDF，AI 逐段翻译，生成原文与译文逐段对照的双语电子书，可导出 EPUB 与 PDF。</p>
+      <a class="btn-gold" href="../v3/login.html">开始使用</a>
+    </div>
+  </div>
+</div>
+<h2 class="lab-h">三 · 字形覆盖检查（页面加载时实测）</h2>
+<p class="lab-sub">方法 1：document.fonts.check 逐字验证目标字体是否可用且覆盖该字；
+方法 2：把每个字渲染到 canvas，与纯回退栈（serif）的渲染结果做位图指纹比对——
+中文在书法体与回退体中的字宽可能同为 1em，因此必须比像素而非比宽度。两项都通过才算未回退。</p>
+<div class="lab-card" id="cover"></div>
+
+<h2 class="lab-h">四 · 设计取舍（自评）</h2>
+<div class="lab-card" style="font-size:14.5px">
+  <p style="margin:0 0 10px"><b>标题字体：</b>已选 Ma Shan Zheng（左侧）。字面端正、部件独立，
+  两行「一纸书文」「两境言说」在 390px 下逐字可辨；Zhi Mang Xing 行书连笔多、字位倾斜，
+  小尺寸辨识速度下降，仅保留作对照。</p>
+  <p style="margin:0 0 10px"><b>字标方案一（霞鹜文楷）：</b>部件清晰、重心平稳，16px 下「译」的言字旁与「伴」的单人旁都能分开认读；
+  金线 + 拉丁副名的三层结构稳重，像一本书的扉页。弱点是气质偏「楷体教材感」，个性弱于方案二。</p>
+  <p style="margin:0 0 10px"><b>字标方案二（马善政毛笔楷书）：</b>有书写笔锋，两字主从关系活跃，放大时最有品牌感；
+  但 16px 导航尺寸下「译」右侧笔画开始并糊，「伴」缩小到 0.86 后单人旁偏细，辨识度低于方案一。</p>
+  <p style="margin:0"><b>推荐：</b>方案一（霞鹜文楷）作为导航与常规尺寸字标，方案二可作为大尺寸品牌场景（如加载页、封面）的辅助字标；
+  量尺标准是 16px 下的可辨性，方案一在这一项上更稳。</p>
+</div>
+<script>
+const TITLE = '一纸书文两境言说';
+const MARK = '译伴';
+const FONTS = [['MSZ Title', TITLE], ['ZMX Title', TITLE],
+               ['LXGW Mark', MARK], ['MSZ Mark', MARK]];
+async function run() {
+  for (const [fam, chars] of FONTS) await document.fonts.load('48px "' + fam + '"', chars);
+  // 逐字渲染成位图并做指纹：若与纯回退栈渲染结果完全一致，才判为回退。
+  // （注意：中文在书法体与回退体里的字宽都可能等于 1em，宽度对照无法判断回退，必须比像素。）
+  function ink(font, ch) {
+    const cv = document.createElement('canvas');
+    cv.width = 72; cv.height = 72;
+    const ctx = cv.getContext('2d');
+    ctx.font = font;
+    ctx.fillStyle = '#000';
+    ctx.textBaseline = 'top';
+    ctx.fillText(ch, 4, 4);
+    const d = ctx.getImageData(0, 0, 72, 72).data;
+    let h = 2166136261, n = 0;
+    for (let i = 3; i < d.length; i += 4) {
+      if (d[i] > 8) n++;
+      h = ((h ^ d[i]) * 16777619) >>> 0;
+    }
+    return h + ':' + n;
+  }
+  const fallback = {};
+  for (const ch of TITLE + MARK) fallback[ch] = ink('48px serif', ch);
+  const rows = [];
+  for (const [fam, chars] of FONTS) {
+    for (const ch of chars) {
+      const check = document.fonts.check('48px "' + fam + '"', ch);
+      const own = ink('48px "' + fam + '"', ch);
+      const rendered = own !== fallback[ch];
+      const pass = check && rendered;
+      rows.push('<tr><td>' + fam + '</td><td style="font-size:18px">' + ch + '</td>' +
+        '<td>' + (check ? '可用' : '缺字') + '</td>' +
+        '<td>' + (rendered ? '与回退不同' : '与回退一致') + '</td>' +
+        '<td class="' + (pass ? 'ok' : 'bad') + '">' + (pass ? '由目标字体绘制' : '疑似回退') + '</td></tr>');
+    }
+  }
+  document.getElementById('cover').innerHTML =
+    '<table class="cover-table"><tr><th>字体</th><th>字符</th><th>字体可用</th><th>渲染比对' +
+    '</th><th>结论</th></tr>' + rows.join('') + '</table>' +
+    '<p class="wm-note">补充说明：中文在书法体与系统回退体中的字宽可能同为 1em，' +
+    '故采用位图指纹比对而非宽度比对。两款字体互相之间的笔画形态也明显不同，可交叉印证未发生回退。</p>';
+}
+run();
+</script>
+</main>
+</body>
+</html>
