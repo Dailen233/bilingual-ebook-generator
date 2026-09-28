@@ -6,6 +6,7 @@
 <title>工作台 · 译伴 BilingualPress</title>
 <link rel="stylesheet" href="pages.css">
 <link rel="stylesheet" href="topbar.css">
+<link rel="stylesheet" href="dashboard.css">
 <meta name="theme-color" content="#1e3a4f">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -15,8 +16,7 @@
 <header class="topbar">
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="译伴 首页">
-      <span class="seal-mark">译</span>
-      <span class="mark-cn">译伴</span>
+      <span class="seal-mark">译伴</span>
     </a>
     <nav class="nav">
       <a href="dashboard.html">工作台</a>
@@ -49,51 +49,33 @@
 </div>
 <div id="nav-mask"></div>
 
-<main class="page-main">
+<main class="page-main db">
   <div class="wrap">
 
-    <div class="sim-bar" style="margin-bottom:22px">
+    <div class="sim-bar" style="margin-bottom:26px">
       <span>◆ 本原型为<b>高保真模拟</b>：登录、任务、书库、生成结果均为本地示例数据，不接真实后端。</span>
     </div>
 
-    <div class="page-head">
+    <div class="db-head">
       <div>
         <h1 id="greet">你好，林一舟</h1>
-        <div class="sub">今天想读哪一本？</div>
+        <p class="db-sub">继续读点什么，或开始一本新书。</p>
       </div>
-      <span class="spacer"></span>
       <a class="btn btn-gold" href="new-task.html">＋ 创建生成任务</a>
     </div>
 
-    <!-- 统计 -->
-    <div class="grid grid-4" style="margin-bottom:28px">
-      <div class="card stat jade hoverable"><div class="k">进行中任务</div><div class="v" id="st-running">0</div></div>
-      <div class="card stat hoverable"><div class="k">我的书籍</div><div class="v" id="st-books">0</div></div>
-      <div class="card stat gold hoverable"><div class="k">已完成</div><div class="v" id="st-done">0</div></div>
-      <div class="card stat hoverable"><div class="k">累计语言对</div><div class="v" id="st-langs">0 <small>种</small></div></div>
-    </div>
+    <section class="db-hero" id="db-hero" aria-label="继续阅读"></section>
 
-    <div class="grid grid-2">
-      <!-- 进行中任务 -->
-      <div class="card">
-        <div class="meta-row" style="margin-bottom:16px">
-          <h2 style="margin:0;font-size:1.2rem">进行中的任务</h2>
-          <span class="spacer" style="flex:1"></span>
-          <a class="link" href="new-task.html">新建</a>
-        </div>
-        <div id="running-list" class="stack"></div>
-      </div>
+    <section class="db-running" id="db-running" aria-label="进行中的任务"></section>
 
-      <!-- 最近书籍 -->
-      <div class="card">
-        <div class="meta-row" style="margin-bottom:16px">
-          <h2 style="margin:0;font-size:1.2rem">最近的书</h2>
-          <span class="spacer" style="flex:1"></span>
-          <a class="link" href="library.html">全部书库 →</a>
-        </div>
-        <div id="recent-list" class="stack"></div>
+    <section class="db-recent">
+      <div class="db-sec-head">
+        <h2>最近的书</h2>
+        <span class="db-stats" id="db-stats"></span>
+        <a class="link" href="library.html">全部书库 →</a>
       </div>
-    </div>
+      <div class="db-recent-list" id="db-recent"></div>
+    </section>
 
   </div>
 </main>
@@ -103,6 +85,18 @@
 <script>
   function logout(){ V2.clearAuth(); location.href='index.html'; }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  function coverHtml(b, i) {
+    var parts = (b.name || '').split(' · ');
+    var zh = (parts[parts.length - 1] || b.name || '').trim();
+    var en = parts.length > 1 ? parts.slice(0, -1).join(' · ').trim() : '';
+    return '<div class="db-cover v' + (i % 3) + '">'
+      + '<span class="c-brand">译伴 · 双语</span>'
+      + (en ? '<span class="c-en">' + esc(en) + '</span>' : '')
+      + '<span class="c-zh">' + esc(zh) + '</span>'
+      + '<span class="c-pair">' + esc(b.src) + ' → ' + esc(b.tgt) + '</span>'
+      + '</div>';
+  }
 
   function render() {
     if (!V2.requireUser()) return;
@@ -116,44 +110,74 @@
     var lib = V2.read(V2.K.library, []);
     var t = V2.getTask();
     var running = (t && t.state === 'running') ? [t] : [];
+    var doneBooks = lib.filter(function(b){ return b.status === 'done'; });
 
-    // 统计
-    var doneBooks = lib.filter(function(b){return b.status==='done';});
-    var langs = {};
-    lib.forEach(function(b){ langs[b.src+'→'+b.tgt] = 1; });
-    running.forEach(function(b){ langs[b.src+'→'+b.tgt] = 1; });
-    document.getElementById('st-running').textContent = running.length;
-    document.getElementById('st-books').textContent = lib.length;
-    document.getElementById('st-done').textContent = doneBooks.length;
-    document.getElementById('st-langs').innerHTML = Object.keys(langs).length + ' <small>种</small>';
+    // 精简统计（辅助决策）
+    document.getElementById('db-stats').textContent =
+      '共 ' + lib.length + ' 本 · 已完成 ' + doneBooks.length + ' · 进行中 ' + running.length;
 
-    // 进行中任务
-    var rl = document.getElementById('running-list');
-    if (running.length === 0) {
-      rl.innerHTML = '<div class="empty"><div class="glyph">📭</div><h3>暂无进行中的任务</h3><p>上传一本书，开始你的第一个双语生成任务。</p><a class="btn btn-jade btn-sm" href="new-task.html">＋ 创建任务</a></div>';
+    // 继续阅读（视觉主角）：最近一本书
+    var hero = document.getElementById('db-hero');
+    if (lib.length) {
+      var book = lib[0];
+      hero.innerHTML =
+        '<div class="db-continue">'
+        + '<div class="db-continue-cover">' + coverHtml(book, 0) + '</div>'
+        + '<div class="db-continue-body">'
+        +   '<span class="db-kicker">继续阅读</span>'
+        +   '<h2 class="db-continue-title">' + esc(book.name) + '</h2>'
+        +   '<p class="db-continue-meta">' + esc(book.src) + ' → ' + esc(book.tgt) + ' · ' + esc(book.time) + '</p>'
+        +   '<a class="btn btn-primary" href="reader.html?id=' + encodeURIComponent(book.id) + '">继续阅读 →</a>'
+        + '</div></div>';
     } else {
-      rl.innerHTML = running.map(function(x){
-        var pct = Math.min(100, Math.round(x.cur / x.total * 100));
-        return '<div class="tile">' +
-          '<div class="thumb">'+esc(x.name.charAt(0))+'</div>' +
-          '<div class="info"><div class="t">'+esc(x.name)+'</div>' +
-          '<div class="s">'+esc(x.src)+' → '+esc(x.tgt)+' · '+x.cur+'/'+x.total+' 段（示例进度单位）</div>' +
-          '<div class="bar gold" style="margin-top:8px"><i style="width:'+pct+'%"></i></div></div>' +
-          '<div class="act"><a class="btn btn-ghost btn-sm" href="task-detail.html">查看</a></div></div>';
-      }).join('');
+      hero.innerHTML =
+        '<div class="db-continue db-empty">'
+        + '<div class="db-empty-mark" aria-hidden="true">译</div>'
+        + '<div class="db-continue-body">'
+        +   '<span class="db-kicker">欢迎使用</span>'
+        +   '<h2 class="db-continue-title">书库还是空的</h2>'
+        +   '<p class="db-continue-meta">上传一本书，AI 逐段翻译成原文与译文对照的双语电子书，导出 EPUB / PDF。</p>'
+        +   '<a class="btn btn-primary" href="new-task.html">＋ 创建第一本书</a>'
+        + '</div></div>';
     }
 
-    // 最近书籍
-    var rec = document.getElementById('recent-list');
-    if (lib.length === 0) {
-      rec.innerHTML = '<div class="empty"><div class="glyph">📚</div><h3>书库还是空的</h3><p>完成的书籍会出现在这里，可重新下载。</p></div>';
+    // 进行中的任务
+    var run = document.getElementById('db-running');
+    if (running.length) {
+      var x = running[0];
+      var pct = Math.min(100, Math.round(x.cur / x.total * 100));
+      run.innerHTML =
+        '<div class="db-run-card">'
+        + '<div class="db-run-info">'
+        +   '<span class="db-kicker">处理中</span>'
+        +   '<div class="db-run-title">' + esc(x.name) + '</div>'
+        +   '<div class="db-run-meta">' + esc(x.src) + ' → ' + esc(x.tgt) + ' · ' + x.cur + '/' + x.total + ' 段</div>'
+        +   '<div class="bar gold"><i style="width:' + pct + '%"></i></div>'
+        + '</div>'
+        + '<a class="btn btn-ghost btn-sm" href="task-detail.html">查看详情</a>'
+        + '</div>';
     } else {
-      rec.innerHTML = lib.slice(0,3).map(function(b){
-        return '<div class="tile">' +
-          '<div class="thumb">'+esc(b.name.charAt(0))+'</div>' +
-          '<div class="info"><div class="t">'+esc(b.name)+'</div>' +
-          '<div class="s">'+esc(b.src)+' → '+esc(b.tgt)+' · '+esc(b.time)+'</div></div>' +
-          '<div class="act"><a class="btn btn-ghost btn-sm" href="reader.html?id='+b.id+'">阅读</a></div></div>';
+      run.innerHTML =
+        '<div class="db-run-empty"><span>暂无进行中的任务</span><a class="link" href="new-task.html">新建任务 →</a></div>';
+    }
+
+    // 最近的书（不含已在继续阅读中的那本）
+    var rec = document.getElementById('db-recent');
+    var rest = lib.slice(1, 4);
+    if (rest.length === 0) {
+      rec.innerHTML = lib.length
+        ? '<div class="db-recent-empty">没有更多书籍。<a class="link" href="new-task.html">创建一本新书 →</a></div>'
+        : '<div class="db-recent-empty">完成的书籍会出现在这里，可随时重新下载或再次阅读。</div>';
+    } else {
+      rec.innerHTML = rest.map(function (b, i) {
+        return '<div class="db-book">'
+          + '<div class="db-book-cover v' + ((i + 1) % 3) + '">' + esc((b.name || '').charAt(0)) + '</div>'
+          + '<div class="db-book-info">'
+          +   '<div class="db-book-title">' + esc(b.name) + '</div>'
+          +   '<div class="db-book-meta">' + esc(b.src) + ' → ' + esc(b.tgt) + ' · ' + esc(b.time) + '</div>'
+          + '</div>'
+          + '<a class="btn btn-ghost btn-sm" href="reader.html?id=' + encodeURIComponent(b.id) + '">阅读</a>'
+          + '</div>';
       }).join('');
     }
   }

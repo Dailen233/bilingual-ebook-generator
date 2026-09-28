@@ -5,6 +5,7 @@
 | 文件 | 源字体 | 许可 | 用途 |
 |---|---|---|---|
 | `assets/fonts/lxgw-wenkai-mark.woff2` | 霞鹜文楷 LXGW WenKai Regular | SIL OFL 1.1 | 字标方案一（「译伴」+ 拉丁副名子集，约 2.4 KB） |
+| `assets/fonts/lxgw-wenkai-login.woff2` | 霞鹜文楷 LXGW WenKai Regular | SIL OFL 1.1 | 登录页欢迎语与点睛文字子集（`login-chars.txt`，约 5 KB） |
 | `assets/fonts/mashanzheng-mark.woff2` | Ma Shan Zheng（马善政毛笔楷书） | SIL OFL 1.1 | 字标方案二子集，约 3.0 KB |
 | `assets/fonts/mashanzheng-title.woff2` | Ma Shan Zheng | SIL OFL 1.1 | 主标题「一纸书文／两境言说」子集 |
 | `assets/fonts/zhimangxing-title.woff2` | Zhi Mang Xing（志莽行书） | SIL OFL 1.1 | 主标题对照方案 |

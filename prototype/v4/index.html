@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>译伴 — 让一本书同时说两种语言</title>
+<script>document.documentElement.classList.add('js');</script>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="topbar.css">
 </head>
@@ -11,8 +12,7 @@
 <header class="topbar">
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="译伴 首页">
-      <span class="seal-mark">译</span>
-      <span class="mark-cn">译伴</span>
+      <span class="seal-mark">译伴</span>
     </a>
     <nav class="nav">
       <a href="dashboard.html">工作台</a>
@@ -20,7 +20,6 @@
     <span class="spacer"></span>
     <div class="guest-actions">
       <a class="btn btn-ghost btn-sm" href="login.html">登录</a>
-      <a class="btn btn-primary btn-sm" href="login.html">开始使用</a>
     </div>
     <div class="acct" hidden>
       <button class="acct-btn" id="acct-btn" type="button" aria-haspopup="true" aria-expanded="false">
@@ -86,31 +85,64 @@
     </div>
   </div>
 </section>
-<section class="section" id="how">
+<section class="section hw-section" id="how">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">How it works</span>
       <h2>三步拿到你的双语书</h2>
       <p>上传、选择语言、等待处理。处理期间可以离开，回来查看进度与结果。</p>
     </div>
-    <div class="steps">
-      <div class="step">
-        <span class="n">01</span>
+
+    <div class="hw">
+      <div class="hw-item" data-step="1">
+        <span class="hw-n">01</span>
         <h3>上传一本书</h3>
-        <p>支持 TXT、EPUB 与文本型 PDF。系统提取正文与章节，过滤页眉页脚与目录等噪音。</p>
-        <p class="meta">原文语言自动识别，可手动修正</p>
+        <p>支持 TXT、EPUB 与文本型 PDF，系统自动提取正文与章节，过滤页眉页脚等噪音。</p>
       </div>
-      <div class="step">
-        <span class="n">02</span>
-        <h3>选择目标语言</h3>
-        <p>确认原文语言、选择要译成哪种语言后提交。长书在后台处理，进度可见。</p>
-        <p class="meta">关闭页面也不会中断</p>
+      <div class="hw-scene" data-step="1">
+        <div class="hwv">
+          <div class="hwv-bar"><span class="hwv-title">上传电子书</span><span class="hwv-steps"><i class="on"></i><i></i><i></i></span><span class="hwv-tag">示意</span></div>
+          <div class="hwv-drop"><span class="up-ic">⇧</span>点击或拖入文件<span class="up-sub">支持 TXT / EPUB / 文本型 PDF</span></div>
+          <div class="hwv-file d0"><span class="f-badge">TXT</span><span class="f-name">english-novel.txt</span><span class="f-conf ok">高置信</span></div>
+          <div class="hwv-file d1"><span class="f-badge">EPUB</span><span class="f-name">story.epub</span><span class="f-conf ok">高置信</span></div>
+          <div class="hwv-file d2"><span class="f-badge">PDF</span><span class="f-name">mixed-sample.pdf</span><span class="f-conf warn">低置信</span></div>
+          <div class="hwv-foot">提取正文与章节 · 过滤页眉页脚等噪音</div>
+        </div>
       </div>
-      <div class="step">
-        <span class="n">03</span>
-        <h3>对照阅读并导出</h3>
-        <p>在线按段对照阅读，下载 EPUB 与 PDF；书籍保存在个人书库，可随时重新下载。</p>
-        <p class="meta">EPUB · PDF 双格式</p>
+
+      <div class="hw-item" data-step="2">
+        <span class="hw-n">02</span>
+        <h3>确认原文与目标语言</h3>
+        <p>原文语言默认自动识别、可手动修正；选择目标语言后提交，任务在后台处理并显示进度。</p>
+      </div>
+      <div class="hw-scene" data-step="2">
+        <div class="hwv">
+          <div class="hwv-bar"><span class="hwv-title">语言设置</span><span class="hwv-steps"><i></i><i class="on"></i><i></i></span><span class="hwv-tag">示意</span></div>
+          <div class="hwv-field"><label>原文语言 · 自动识别</label><div class="hwv-detect"><span class="det">英语</span><span class="f-conf ok">高置信</span><span class="det-ok">已确认</span></div></div>
+          <div class="hwv-field"><label>目标语言</label><div class="hwv-select">中文<span class="chev">▾</span><span class="sel-ok">✓</span></div></div>
+          <div class="hwv-pairchip"><span class="pc-src">英语</span><span class="pc-arrow">→</span><span class="pc-tgt">中文</span><span class="pc-note">即将按此语言对生成对照</span></div>
+          <div class="hwv-prev">
+            <div class="hwv-prev-label">对齐预览（示意）</div>
+            <div class="hwv-pair d0"><p class="s">She locked the door and waited.</p><p class="t">她锁上门，静静地等待。</p></div>
+          </div>
+          <div class="hwv-note">语言对将按所选翻译服务的能力核对</div>
+        </div>
+      </div>
+
+      <div class="hw-item" data-step="3">
+        <span class="hw-n">03</span>
+        <h3>逐段对照并导出</h3>
+        <p>原文与译文逐段对齐，在线对照阅读，下载 EPUB 与 PDF；书籍留在书库可随时再取。</p>
+      </div>
+      <div class="hw-scene" data-step="3">
+        <div class="hwv">
+          <div class="hwv-bar"><span class="hwv-title">双语成品</span><span class="hwv-steps"><i></i><i></i><i class="on"></i></span><span class="hwv-tag">示意</span></div>
+          <div class="hwv-pair d0"><p class="s">The fog rolled in from the harbor at dusk.</p><p class="t">黄昏时分，雾从港口漫了进来。</p></div>
+          <div class="hwv-pair d1"><p class="s">She locked the door and waited.</p><p class="t">她锁上门，静静地等待。</p></div>
+          <div class="hwv-pair d2"><p class="s">The lighthouse blinked twice, then went dark.</p><p class="t">灯塔闪了两下，随后熄灭。</p></div>
+          <div class="hwv-btns"><span class="hwv-btn">EPUB</span><span class="hwv-btn">PDF</span></div>
+          <div class="hwv-foot">逐段对齐 · 保留原书段落结构 · 示意内容</div>
+        </div>
       </div>
     </div>
   </div>
@@ -165,6 +197,29 @@
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apply(p); }
     });
   });
+})();
+</script>
+<script>
+// 三步叙事：滚动驱动当前步骤强调（不劫持滚轮；向上滚回时正确回退）
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('.hw-item'));
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('.hw-scene'));
+  if (!items.length) return;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setActive(n) {
+    items.forEach(function (r) { r.classList.toggle('is-active', r.dataset.step === String(n)); });
+    scenes.forEach(function (s) { s.classList.toggle('is-on', s.dataset.step === String(n)); });
+  }
+  setActive(1);
+  if (reduce || !('IntersectionObserver' in window)) { setActive(1); return; }
+  var ratios = {};
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { ratios[e.target.dataset.step] = e.intersectionRatio; });
+    var best = '1', bestR = -1;
+    for (var k in ratios) { if (ratios[k] > bestR) { bestR = ratios[k]; best = k; } }
+    setActive(best);
+  }, { threshold: [0, .1, .3, .5, .7, 1], rootMargin: '-24% 0px -24% 0px' });
+  items.forEach(function (r) { io.observe(r); });
 })();
 </script>
 <script src="topbar.js"></script>

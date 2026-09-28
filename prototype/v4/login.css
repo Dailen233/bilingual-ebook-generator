@@ -1,0 +1,130 @@
+/* v4 登录页视觉：与首页统一（暖纸、墨蓝、线描装帧）
+   仅 login.html 引用，覆盖 pages.css 的 .auth 分屏。 */
+
+/* 欢迎语与点睛文字：霞鹜文楷（本地子集） */
+@font-face {
+  font-family: "LXGW Login";
+  src: url("assets/fonts/lxgw-wenkai-login.woff2") format("woff2");
+  font-weight: 400; font-display: swap;
+}
+
+:root {
+  --paper: #f7f4ec;
+  --paper-2: #efeade;
+  --panel: #fffdf8;
+  --panel-2: #fbf7ee;
+  --ink: #16303f;
+  --ink-2: #2c4c63;
+  --ink-3: #35587a;
+  --ink-soft: #5d7488;
+  --jade: #1f5b4a;
+  --jade-2: #2f7a63;
+  --gold: #a87c2e;
+  --gold-2: #c9a04a;
+  --gold-soft: #f2e6c8;
+  --gold-faint: #f7efdc;
+  --muted: #5f6b70;
+  --faint: #8b959a;
+  --line: #dcd7ca;
+  --line-2: #c5bfb0;
+  --serif: "Noto Serif CJK SC", "BP Serif SC", Georgia, serif;
+  --sans: "Noto Sans CJK SC", "BP Sans SC", "PingFang SC", system-ui, sans-serif;
+}
+
+/* 整体纸色 */
+.auth {
+  min-height: calc(100vh - 64px);
+  grid-template-columns: 42fr 58fr;
+  background: radial-gradient(900px 420px at 50% -10%, #fff 0%, transparent 70%), var(--paper);
+}
+
+/* 左侧：墨蓝装帧面板（线描书页 + 印记 + 一句欢迎语） */
+.auth .art {
+  background:
+    radial-gradient(620px 400px at 50% 112%, rgba(47,122,99,.14), transparent 60%),
+    linear-gradient(168deg, #17293a 0%, #1e3a4f 100%);
+  color: #eef0e9; padding: 52px 46px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+}
+.auth .art::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(245,240,230,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,240,230,.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(80% 90% at 50% 30%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(80% 90% at 50% 30%, #000 30%, transparent 100%);
+}
+.auth .art::after { content: none; }
+.auth .art .kicker {
+  display: block; margin-bottom: 16px; position: relative;
+  font-family: "LXGW Login", var(--serif); font-size: 13px;
+  letter-spacing: .5em; padding-left: .5em; color: var(--gold-2);
+}
+.auth .art h2 {
+  color: #f5f0e6; font-family: "LXGW Login", var(--serif);
+  font-size: clamp(1.6rem, 2.2vw, 2.05rem); font-weight: 400;
+  line-height: 1.62; letter-spacing: .02em; margin: 0; position: relative;
+}
+
+/* 原创线描装帧：书页堆叠（书口纸线 + 金书脊 + 书签带）· 回纹角 · 朱印 */
+.bind-art { position: relative; width: 320px; height: 260px; margin-top: 30px; }
+.paper {
+  position: absolute; left: 8px; top: 44px; width: 240px; height: 168px;
+  border-radius: 4px 18px 18px 4px; transform: rotate(-3deg);
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(245,240,230,.34) 0 1px, rgba(245,240,230,0) 1px 5px),
+    linear-gradient(160deg, rgba(245,240,230,.10), rgba(245,240,230,.02));
+  border: 1px solid rgba(245,240,230,.20);
+  box-shadow: 0 20px 40px rgba(5,14,22,.42);
+}
+.paper::before {
+  content: ""; position: absolute; left: -10px; top: -6px; bottom: -6px; width: 13px;
+  background: linear-gradient(90deg, rgba(201,160,74,.55), rgba(201,160,74,.08));
+  border-radius: 6px 0 0 6px;
+}
+.paper::after {
+  content: ""; position: absolute; right: 40px; top: -9px; width: 26px; height: 10px;
+  background: rgba(201,160,74,.85); border-radius: 2px 2px 0 0;
+}
+.frame {
+  position: absolute; right: 2px; top: 2px; width: 80px; height: 80px;
+  border-top: 1px solid rgba(201,160,74,.5);
+  border-right: 1px solid rgba(201,160,74,.5);
+}
+.frame::before {
+  content: ""; position: absolute; right: 10px; top: 10px; width: 30px; height: 30px;
+  border-top: 1px solid rgba(201,160,74,.4);
+  border-right: 1px solid rgba(201,160,74,.4);
+}
+.seal {
+  position: absolute; right: 14px; bottom: 8px; width: 54px; height: 54px;
+  border: 1.5px solid rgba(176,74,58,.9); border-radius: 6px; transform: rotate(-5deg);
+}
+.seal::before { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(176,74,58,.5); border-radius: 3px; }
+.seal i { position: absolute; background: rgba(176,74,58,.9); }
+.seal .s1 { left: 50%; top: 9px; bottom: 9px; width: 2.5px; transform: translateX(-50%); }
+.seal .s2 { left: 12px; top: 50%; width: 15px; height: 2.5px; transform: translateY(-50%); }
+.seal .s3 { right: 12px; top: 50%; width: 13px; height: 2.5px; transform: translateY(-50%); }
+
+/* 右侧表单 */
+.auth .form-side { background: transparent; padding: 40px; }
+.auth .form-card h1 {
+  font-family: var(--serif); font-weight: 700; font-size: 2rem;
+  letter-spacing: .06em; color: var(--ink); position: relative;
+  padding-bottom: 12px; margin-bottom: 6px;
+}
+.auth .form-card h1::after {
+  content: ""; position: absolute; left: 0; bottom: 0; width: 36px; height: 3px;
+  background: var(--gold-2); border-radius: 2px;
+}
+.input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,160,74,.16); }
+
+/* 手机端：收起装饰区，顶栏下直接呈现登录表单 */
+@media (max-width: 900px) {
+  .auth { min-height: 0; grid-template-columns: 1fr; }
+  .auth .art { display: none; }
+  .auth .form-side { align-items: flex-start; padding: 22px 18px 44px; }
+}

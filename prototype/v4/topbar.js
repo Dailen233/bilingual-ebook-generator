@@ -20,6 +20,15 @@
     return p;
   }
 
+  // 同步路由守卫：在 DOMContentLoaded 之前执行，避免引导页闪屏。
+  // 已登录访问 index / login / register 时立即跳转到工作台（不先渲染页面）。
+  (function guardNow() {
+    var pages = ['index.html', 'login.html', 'register.html'];
+    if (pages.indexOf(currentFile()) !== -1 && read('v2_user_v1', null)) {
+      location.replace('dashboard.html');
+    }
+  })();
+
   // 子页面归属：阅读页归「我的书库」，任务详情归「创建任务」
   var PARENT = { 'reader.html': 'library.html', 'task-detail.html': 'new-task.html' };
 
@@ -55,26 +64,41 @@
 
   function syncAuth() {
     var user = read('v2_user_v1', null);
+    // 已登录时 Logo 指向应用主页（工作台），未登录时指向营销首页
+    var brand = document.querySelector('.brand');
+    if (brand) brand.setAttribute('href', user ? 'dashboard.html' : 'index.html');
     var acct = document.querySelector('.acct');
     var guest = document.querySelector('.guest-actions');
-    if (!acct && !guest) return;
-    if (user) {
-      if (acct) acct.hidden = false;
-      if (guest) guest.hidden = true;
-      var name = user.name || '示例用户';
-      var mail = user.mail || 'example@example.com';
-      var av = document.getElementById('u-av');
-      var nn = document.getElementById('u-name');
-      var mm = document.getElementById('u-mail');
-      var am = document.getElementById('acct-mail');
-      if (av) av.textContent = name.charAt(0);
-      if (nn) nn.textContent = name;
-      if (mm) mm.textContent = mail;
-      if (am) am.textContent = mail;
-    } else {
-      if (acct) acct.hidden = true;
-      if (guest) guest.hidden = false;
+    if (acct || guest) {
+      if (user) {
+        if (acct) acct.hidden = false;
+        if (guest) guest.hidden = true;
+        var name = user.name || '示例用户';
+        var mail = user.mail || 'example@example.com';
+        var av = document.getElementById('u-av');
+        var nn = document.getElementById('u-name');
+        var mm = document.getElementById('u-mail');
+        var am = document.getElementById('acct-mail');
+        if (av) av.textContent = name.charAt(0);
+        if (nn) nn.textContent = name;
+        if (mm) mm.textContent = mail;
+        if (am) am.textContent = mail;
+      } else {
+        if (acct) acct.hidden = true;
+        if (guest) guest.hidden = false;
+      }
     }
+  }
+
+  // 已登录访问 index / login / register 时，直接跳到工作台（不先展示这些引导页）
+  function redirectAuthed() {
+    var f = currentFile();
+    var guardPages = ['index.html', 'login.html', 'register.html'];
+    if (guardPages.indexOf(f) !== -1 && read('v2_user_v1', null)) {
+      location.replace('dashboard.html');
+      return true;
+    }
+    return false;
   }
 
   function setupAccount() {
@@ -148,12 +172,22 @@
     });
   }
 
+  // 重同步：先做路由守卫，再刷新顶栏账号/游客态
+  function resync() {
+    if (redirectAuthed()) return;
+    syncAuth();
+  }
+
   function init() {
+    if (redirectAuthed()) return;
     markCurrent();
     syncAuth();
     setupAccount();
     setupDrawer();
     escapeClosesDrawer();
+    // bfcache 返回 / 其他标签页登录态变化时，重新执行路由守卫并同步顶栏
+    window.addEventListener('pageshow', resync);
+    window.addEventListener('storage', resync);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

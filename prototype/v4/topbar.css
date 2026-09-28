@@ -1,22 +1,47 @@
 /* v4 共享顶栏与品牌
    首页与 7 个用户内页共用；必须在 styles.css / pages.css 之后加载。
-   品牌：深墨方章「译」+ 霞鹜文楷「译伴」字标（沿用已选定字体与本地子集）。 */
+   品牌：横向实底印章「译伴」（墨蓝实底、暖白字、金色细内线）。 */
+
+/* 品牌字标字体：霞鹜文楷（本地子集，8 页统一在此声明） */
+@font-face {
+  font-family: "LXGW Mark";
+  src: url("assets/fonts/lxgw-wenkai-mark.woff2") format("woff2");
+  font-weight: 400; font-display: block;
+}
+
+/* 跨页过渡：同源多页面 View Transition（仅渐变，短且有节奏）。
+   不支持该特性的浏览器按普通跳转处理，无副作用。 */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: vt-out .14s cubic-bezier(.4, 0, .2, 1) both;
+}
+::view-transition-new(root) {
+  animation: vt-in .24s cubic-bezier(.22, .68, .3, 1) both;
+}
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}
 
 .topbar { position: sticky; top: 0; z-index: 50; background: rgba(247,244,236,.92);
   backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .topbar .wrap { display: flex; align-items: center; gap: 18px; height: 64px; }
 
-.brand { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.brand .seal-mark { position: relative; width: 28px; height: 28px; border-radius: 7px;
-  background: linear-gradient(160deg, #1d3c50 0%, #16303f 100%); color: var(--gold-2);
-  display: grid; place-items: center; font-family: "LXGW Mark", var(--serif);
-  font-size: 15px; line-height: 1; padding-bottom: 1px;
-  box-shadow: 0 1px 2px rgba(16,34,46,.24); }
+.brand { display: inline-flex; align-items: center; flex-shrink: 0; }
+/* Logo：两字「译伴」同在一个实底横向印章内（墨蓝实底、暖白字、细内线） */
+.brand .seal-mark { position: relative; display: inline-flex; align-items: center;
+  font-family: "LXGW Mark", var(--serif); font-size: 17px; font-weight: 400;
+  letter-spacing: .14em; line-height: 1; padding: 8px 12px 9px 14px;
+  color: #f3ecdc; background: #1b3a4d;
+  -webkit-text-stroke: 0.35px #f3ecdc; paint-order: stroke fill;
+  border-radius: 7px; box-shadow: 0 1px 1px rgba(16,34,46,.18);
+  transition: filter .18s var(--ease); }
 .brand .seal-mark::after { content: ""; position: absolute; inset: 3px;
-  border: 1px solid rgba(201,160,74,.5); border-radius: 4px; }
-.brand .mark-cn { font-family: "LXGW Mark", var(--serif); font-size: 19px; font-weight: 400;
-  letter-spacing: .1em; padding-left: .1em; line-height: 1; color: var(--ink); }
-.topbar .brand:hover .mark-cn { color: var(--ink-2); }
+  border: 1px solid rgba(201,160,74,.5); border-radius: 5px; pointer-events: none; }
+.brand:hover .seal-mark { filter: brightness(1.08); }
 
 .topbar .nav { display: flex; gap: 4px; margin-left: 10px; }
 .topbar .nav a { padding: 8px 12px; border-radius: 8px; font-size: 14.5px; font-weight: 500;
@@ -76,6 +101,6 @@
   .acct-btn { padding: 0 9px 0 5px; gap: 6px; }
 }
 @media (max-width: 420px) {
-  .brand .mark-cn { font-size: 18px; }
+  .brand .seal-mark { font-size: 16px; padding: 7px 11px 8px 13px; }
   .guest-actions .btn-sm { padding: 7px 11px; font-size: 13px; }
 }

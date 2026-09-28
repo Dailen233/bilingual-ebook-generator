@@ -1,0 +1,121 @@
+/* v4 工作台独立样式
+   覆盖 pages.css 的品牌 token 以对齐 v4 首页视觉；复用其 .btn/.bar/.link 等基础类。
+   不改 pages.css，避免影响其他内页。 */
+
+:root {
+  --paper: #f7f4ec;
+  --paper-2: #efeade;
+  --panel: #fffdf8;
+  --panel-2: #fbf7ee;
+  --ink: #16303f;
+  --ink-2: #2c4c63;
+  --ink-soft: #5c7488;
+  --jade: #1f5b4a;
+  --jade-2: #2f7a63;
+  --gold: #a87c2e;
+  --gold-2: #c9a04a;
+  --muted: #5f6b70;
+  --faint: #8b959a;
+  --line: #dcd7ca;
+  --line-2: #c5bfb0;
+  --ease: cubic-bezier(.22, .68, .3, 1);
+}
+
+/* ---- 页头 ---- */
+.db-head { display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap; margin-bottom: 26px; }
+.db-head h1 { font-size: 2rem; font-weight: 700; letter-spacing: .01em; }
+.db-sub { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+.db-kicker { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .24em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+
+/* ---- 继续阅读主角 ---- */
+.db-hero { margin-bottom: 22px; }
+.db-continue { display: grid; grid-template-columns: 220px 1fr; gap: 30px; align-items: center;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  padding: 26px; box-shadow: 0 1px 2px rgba(20,32,40,.06);
+  transition: box-shadow .2s var(--ease); }
+.db-continue:hover { box-shadow: 0 12px 32px rgba(16,34,46,.10); }
+.db-continue-title { font-size: 1.7rem; margin: 0 0 8px; }
+.db-continue-meta { margin: 0 0 20px; color: var(--muted); font-size: 14.5px; }
+
+/* 排版式封面（原创 CSS，无图片） */
+.db-cover { position: relative; display: flex; flex-direction: column; justify-content: space-between;
+  height: 200px; padding: 18px 16px; border-radius: 10px; overflow: hidden;
+  color: #f4ecdc; box-shadow: 0 10px 24px rgba(16,34,46,.18); }
+.db-cover::after { content: ""; position: absolute; inset: 7px;
+  border: 1px solid rgba(201,160,74,.45); border-radius: 7px; pointer-events: none; }
+.db-cover .c-brand { font-size: 10px; letter-spacing: .22em; color: rgba(244,236,220,.7);
+  text-transform: uppercase; position: relative; }
+.db-cover .c-en { font-family: var(--serif); font-size: 15px; line-height: 1.4;
+  color: rgba(244,236,220,.92); margin-top: auto; position: relative; }
+.db-cover .c-zh { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.25;
+  word-break: break-word; position: relative; }
+.db-cover .c-pair { font-size: 11.5px; letter-spacing: .08em; color: rgba(244,236,220,.85);
+  border-top: 1px solid rgba(244,236,220,.25); padding-top: 9px; position: relative; }
+.db-cover.v0 { background: linear-gradient(160deg, #1d3c50, #16303f); }
+.db-cover.v1 { background: linear-gradient(160deg, #2a6d59, #1f5b4a); }
+.db-cover.v2 { background: linear-gradient(160deg, #7a5a24, #5f441a); }
+
+/* 空状态 */
+.db-continue.db-empty { grid-template-columns: 96px 1fr; }
+.db-empty-mark { width: 84px; height: 84px; border-radius: 16px; display: grid; place-items: center;
+  font-family: var(--serif); font-size: 38px; font-weight: 700; color: var(--gold-2);
+  background: var(--paper-2); border: 1px solid var(--line); }
+
+/* ---- 进行中任务 ---- */
+.db-running { margin-bottom: 26px; }
+.db-run-card { display: flex; align-items: center; gap: 20px; padding: 18px 20px;
+  background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold-2);
+  border-radius: 12px; transition: box-shadow .2s var(--ease); }
+.db-run-card:hover { box-shadow: 0 10px 28px rgba(16,34,46,.10); }
+.db-run-info { flex: 1; min-width: 0; }
+.db-run-title { font-family: var(--serif); font-weight: 700; font-size: 16px; color: var(--ink);
+  margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.db-run-meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.db-run-empty { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border: 1px dashed var(--line-2); border-radius: 12px;
+  color: var(--muted); font-size: 14px; }
+
+/* ---- 最近的书 ---- */
+.db-sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+.db-sec-head h2 { font-size: 1.25rem; }
+.db-stats { font-size: 13px; color: var(--faint); }
+.db-sec-head .link { margin-left: auto; }
+.db-recent-list { display: flex; flex-direction: column; border: 1px solid var(--line);
+  border-radius: 14px; background: var(--panel); overflow: hidden; }
+.db-book { display: flex; align-items: center; gap: 16px; padding: 14px 18px;
+  transition: background-color .18s var(--ease); }
+.db-book + .db-book { border-top: 1px solid var(--line); }
+.db-book:hover { background: var(--panel-2); }
+.db-book-cover { width: 40px; height: 52px; border-radius: 6px; display: grid; place-items: center;
+  font-family: var(--serif); font-weight: 700; color: #f4ecdc; flex-shrink: 0; }
+.db-book-cover.v0 { background: linear-gradient(160deg, #1d3c50, #16303f); }
+.db-book-cover.v1 { background: linear-gradient(160deg, #2a6d59, #1f5b4a); }
+.db-book-cover.v2 { background: linear-gradient(160deg, #7a5a24, #5f441a); }
+.db-book-info { flex: 1; min-width: 0; }
+.db-book-title { font-family: var(--serif); font-weight: 700; color: var(--ink); font-size: 15.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.db-book-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.db-recent-empty { padding: 18px; text-align: center; color: var(--faint); font-size: 14px; }
+
+/* 焦点反馈 */
+.db-continue a:focus-visible, .db-run-card a:focus-visible, .db-book a:focus-visible,
+.db-run-empty a:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .db-continue, .db-continue.db-empty { grid-template-columns: 1fr; }
+  .db-cover { height: auto; min-height: 170px; }
+}
+@media (max-width: 560px) {
+  .db-head { align-items: flex-start; }
+  .db-head h1 { font-size: 1.6rem; }
+  .db-continue { padding: 20px; gap: 20px; }
+  .db-continue-title { font-size: 1.4rem; }
+  .db-cover { min-height: 150px; }
+  .db-run-card { flex-direction: column; align-items: flex-start; }
+  .db-sec-head { gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .db-continue, .db-run-card, .db-book { transition: none; }
+}

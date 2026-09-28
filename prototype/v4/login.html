@@ -6,6 +6,7 @@
 <title>登录 · 译伴 BilingualPress</title>
 <link rel="stylesheet" href="pages.css">
 <link rel="stylesheet" href="topbar.css">
+<link rel="stylesheet" href="login.css">
 <meta name="theme-color" content="#1e3a4f">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -15,8 +16,7 @@
 <header class="topbar">
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="译伴 首页">
-      <span class="seal-mark">译</span>
-      <span class="mark-cn">译伴</span>
+      <span class="seal-mark">译伴</span>
     </a>
     <span class="spacer"></span>
     <div class="guest-actions">
@@ -52,17 +52,19 @@
   <div class="auth">
     <!-- 左侧品牌艺术区 -->
     <div class="art">
-      <div class="seal">译</div>
+      <span class="kicker">双语阅读伴侣</span>
       <h2>让每一页，<br>都有另一门语言陪伴。</h2>
-      <p>登录后，你的书籍、任务、下载与阅读记录都归属到你的账号，可在任何已登录的设备找回。</p>
-      <div class="quote">"原文与译文逐段对照，是最贴近语言学习的双语阅读方式。"</div>
+      <div class="bind-art" aria-hidden="true">
+        <span class="paper"></span>
+        <span class="frame"></span>
+        <span class="seal"><i class="s1"></i><i class="s2"></i><i class="s3"></i></span>
+      </div>
     </div>
 
     <!-- 右侧表单 -->
     <div class="form-side">
       <div class="form-card">
-        <a class="back" href="index.html">← 返回首页</a>
-        <h1 style="font-size:1.7rem;margin-bottom:4px">登录</h1>
+        <h1>登录</h1>
         <p style="color:var(--muted);font-size:14px;margin-bottom:22px">欢迎回来，继续你的双语阅读。</p>
 
         <div class="sim-bar" style="margin-bottom:20px">
@@ -73,7 +75,7 @@
           <div class="field">
             <label for="mail">邮箱</label>
             <input class="input" id="mail" type="email" value="yizhou@example.com" autocomplete="username">
-            <div class="hint-line">示例账号（设计阶段再定注册字段与验证策略，P12 待确认）</div>
+            <div class="hint-line">已填入示例账号，可直接登录体验</div>
           </div>
           <div class="field">
             <label for="pwd">密码</label>
@@ -86,10 +88,7 @@
         <div class="divider">或</div>
         <button class="btn btn-ghost btn-block" type="button" onclick="demoLogin()">以示例账号登录（模拟）</button>
 
-        <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--muted)">
-          还没有账号？<a class="link" href="register.html">立即注册</a>
-        </p>
-        <p style="text-align:center;margin-top:6px;font-size:12.5px;color:var(--faint)">
+        <p style="text-align:center;margin-top:20px;font-size:12.5px;color:var(--faint)">
           管理员请使用<a class="link gold" href="../v3/admin-login.html">独立管理入口</a>
         </p>
       </div>
