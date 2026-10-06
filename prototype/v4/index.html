@@ -223,5 +223,11 @@
 })();
 </script>
 <script src="topbar.js"></script>
+<script>
+  // 公开首页也注册 Service Worker（manifest start_url 为首页；应用页/管理页由 app.js 注册）
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+</script>
 </body>
 </html>

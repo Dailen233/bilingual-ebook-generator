@@ -6,6 +6,29 @@
 <title>创建生成任务 · 译伴 BilingualPress</title>
 <link rel="stylesheet" href="pages.css">
 <link rel="stylesheet" href="topbar.css">
+<style>
+/* AI 翻译设置（new-task 页内联） */
+.style-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.style-opt { position: relative; display: flex; flex-direction: column; gap: 6px;
+  padding: 14px 14px 12px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.style-opt:hover { border-color: var(--line-2); }
+.style-opt.on { border-color: var(--gold-2); box-shadow: 0 0 0 3px rgba(201,160,74,.14); }
+.style-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.style-opt .so-name { font-weight: 600; color: var(--ink); font-size: 14.5px; }
+.style-opt.on .so-name { color: var(--gold); }
+.style-opt .so-desc { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+.summary { margin-top: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.sum-title { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--faint); text-transform: uppercase; margin-bottom: 10px; }
+.sum-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+.sum-row { display: flex; align-items: baseline; gap: 10px; font-size: 13.5px; }
+.sum-row span { color: var(--muted); flex-shrink: 0; }
+.sum-row b { color: var(--ink); font-weight: 600; }
+@media (max-width: 560px) {
+  .style-grid { grid-template-columns: 1fr; }
+  .sum-rows { grid-template-columns: 1fr; }
+}
+</style>
 <meta name="theme-color" content="#1e3a4f">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -64,7 +87,7 @@
     <div class="steps-mini" id="steps-mini">
       <span class="sm-step active" data-step="1">① 上传</span><i></i>
       <span class="sm-step" data-step="2">② 语言设置</span><i></i>
-      <span class="sm-step" data-step="3">③ 处理中</span>
+      <span class="sm-step" data-step="3">③ AI 翻译设置</span>
     </div>
 
     <!-- 步骤 1：上传 -->
@@ -139,8 +162,50 @@
         </select>
       </div>
       <div class="row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
-        <button class="btn btn-primary" onclick="startTask()">开始处理 →</button>
+        <button class="btn btn-primary" onclick="showAiCard()">下一步：AI 翻译设置 →</button>
         <button class="btn btn-ghost" onclick="resetFile()">重新选择文件</button>
+      </div>
+    </div>
+
+    <!-- 步骤 3：AI 翻译设置 -->
+    <div class="card" id="ai-card" style="margin-bottom:20px;display:none">
+      <h2 style="font-size:1.1rem">③ AI 翻译设置</h2>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">选择翻译服务与翻译风格。以下服务均为<b>原型演示，尚未接入</b>真实 API；普通用户无需填写 API Key。</p>
+
+      <div id="ai-loaderr" class="alert alert-warn" style="display:none;margin-bottom:16px">
+        <span class="ic">⚠</span><span>翻译配置未加载（浏览器可能缓存了旧版脚本）。请刷新页面后重试。</span>
+      </div>
+
+      <div id="ai-body">
+      <div class="field">
+        <label for="svc-sel">翻译服务</label>
+        <select class="input" id="svc-sel" onchange="onServiceChange()"></select>
+        <div class="hint-line" id="svc-note"></div>
+      </div>
+      <div class="field" id="model-field">
+        <label for="model-sel">模型</label>
+        <select class="input" id="model-sel" onchange="onModelChange()"></select>
+      </div>
+      <div class="field">
+        <label>翻译风格（产品偏好演示 · 不承诺准确率）</label>
+        <div class="style-grid" id="style-grid"></div>
+      </div>
+
+      <div class="summary" id="summary">
+        <div class="sum-title">提交摘要</div>
+        <div class="sum-rows">
+          <div class="sum-row"><span>语言对</span><b id="sum-lang">—</b></div>
+          <div class="sum-row"><span>翻译服务</span><b id="sum-svc">—</b></div>
+          <div class="sum-row" id="sum-model-row"><span>模型</span><b id="sum-model">—</b></div>
+          <div class="sum-row"><span>翻译风格</span><b id="sum-style">—</b></div>
+        </div>
+      </div>
+
+      <div class="row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
+        <button class="btn btn-primary" onclick="startTask()">开始处理 →</button>
+        <button class="btn btn-ghost" onclick="backToLang()">返回修改语言</button>
+        <button class="btn btn-ghost" onclick="resetFile()">重新选择文件</button>
+      </div>
       </div>
     </div>
 
@@ -160,9 +225,18 @@
 <script src="topbar.js"></script>
 <script>
   var LANGS = { 'English':'英语','Mixed':'混合语言','Scanned':'无法提取','Doc':'不支持' };
-  var cur = { name:'', lang:'', conf:1 };
+  var CFG = window.AI_TRANSLATE || { services: [], styles: [] };
+  var cur = { name:'', lang:'', conf:1, ok:false, service:'', model:'', style:'' };
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function hasCfg(){ return !!(CFG && CFG.services && CFG.services.length && CFG.styles && CFG.styles.length); }
+  function findService(id){ return CFG.services.filter(function(s){ return s.id===id; })[0]; }
+  function findModel(svc, id){ return svc && svc.models ? svc.models.filter(function(m){ return m.id===id; })[0] : null; }
+  function findStyle(id){ return CFG.styles.filter(function(s){ return s.id===id; })[0]; }
+  function finalSrc(){
+    var s = document.getElementById('src-lang').value;
+    return s === 'auto' ? (LANGS[cur.lang] || cur.lang) : s;
+  }
 
   // 阶段指示条
   function setStep(n) {
@@ -174,7 +248,8 @@
   }
 
   function selectFile(name, lang, conf) {
-    cur = { name:name, lang:lang, conf:conf };
+    // 换文件时保留已选的翻译服务/风格草稿，避免每次重选；ok 标记文件是否有效
+    cur = { name:name, lang:lang, conf:conf, ok:(lang !== 'Doc' && lang !== 'Scanned'), service:cur.service, model:cur.model, style:cur.style };
     document.querySelectorAll('.sample-file').forEach(function(b){
       b.classList.toggle('selected', b.dataset.name === name);
     });
@@ -183,6 +258,7 @@
     if (lang === 'Doc') {
       setStep(1);
       document.getElementById('lang-card').style.display = 'none';
+      document.getElementById('ai-card').style.display = 'none';
       document.getElementById('empty-hint').style.display = 'block';
       document.getElementById('file-error').innerHTML =
         '<div class="alert alert-err"><span class="ic">✕</span><span><b>不支持的文件格式：</b>.docx。本系统支持 .txt / .epub / .pdf（文本型）。请转换格式后重新上传。</span></div>';
@@ -191,6 +267,7 @@
     if (lang === 'Scanned') {
       setStep(1);
       document.getElementById('lang-card').style.display = 'none';
+      document.getElementById('ai-card').style.display = 'none';
       document.getElementById('empty-hint').style.display = 'block';
       document.getElementById('file-error').innerHTML =
         '<div class="alert alert-err"><span class="ic">✕</span><span><b>无法从该 PDF 提取有效正文：</b>内容疑似扫描版（图片型）PDF。当前版本暂不支持扫描版 PDF（OCR 为后续评估的优化候选，未承诺）。请上传文本型 PDF、EPUB 或 TXT。</span></div>';
@@ -200,6 +277,7 @@
     document.getElementById('file-error').innerHTML = '';
     document.getElementById('empty-hint').style.display = 'none';
     document.getElementById('lang-card').style.display = 'block';
+    document.getElementById('ai-card').style.display = 'none';
     setStep(2);
     document.getElementById('f-name').textContent = name;
     document.getElementById('f-detected').textContent = LANGS[lang] || lang;
@@ -210,33 +288,137 @@
   }
   function onSrcChange(){ document.getElementById('lowconf').style.display = 'none'; }
   function resetFile(){
-    cur = { name:'', lang:'', conf:1 };
+    cur = { name:'', lang:'', conf:1, ok:false, service:'', model:'', style:'' };
     setStep(1);
     document.querySelectorAll('.sample-file').forEach(function(b){ b.classList.remove('selected'); });
     document.getElementById('lang-card').style.display = 'none';
+    document.getElementById('ai-card').style.display = 'none';
     document.getElementById('empty-hint').style.display = 'block';
     document.getElementById('file-error').innerHTML = '';
   }
 
+  // ---- AI 翻译设置 ----
+  function buildServices(){
+    var sel = document.getElementById('svc-sel');
+    sel.innerHTML = CFG.services.map(function(s){ return '<option value="'+s.id+'">'+esc(s.name)+'</option>'; }).join('');
+    cur.service = CFG.services[0].id;
+    buildModels();
+    setSvcNote();
+  }
+  function setSvcNote(){
+    var svc = findService(cur.service);
+    document.getElementById('svc-note').textContent = (svc && svc.note) ? svc.note : '';
+  }
+  function buildModels(){
+    var svc = findService(cur.service);
+    var models = (svc && svc.models) ? svc.models : [];
+    var field = document.getElementById('model-field');
+    var sel = document.getElementById('model-sel');
+    field.style.display = models.length ? '' : 'none';
+    if (!models.length) { sel.innerHTML = ''; cur.model = null; return; }
+    sel.innerHTML = models.map(function(m){ return '<option value="'+m.id+'">'+esc(m.name)+'</option>'; }).join('');
+    cur.model = models[0].id;
+  }
+  function buildStyles(){
+    var box = document.getElementById('style-grid');
+    box.innerHTML = CFG.styles.map(function(st){
+      return '<label class="style-opt'+(cur.style===st.id?' on':'')+'">' +
+        '<input type="radio" name="style" value="'+st.id+'"'+(cur.style===st.id?' checked':'')+'>' +
+        '<span class="so-name">'+esc(st.name)+'</span>' +
+        '<span class="so-desc">'+esc(st.desc)+'</span>' +
+      '</label>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.style-opt'), function(l){
+      l.addEventListener('click', function(){
+        cur.style = l.querySelector('input').value;
+        buildStyles();
+        updateSummary();
+      });
+    });
+  }
+  function updateSummary(){
+    var svc = findService(cur.service);
+    var mdl = findModel(svc, cur.model);
+    var st = findStyle(cur.style);
+    document.getElementById('sum-lang').textContent = finalSrc() + ' → ' + document.getElementById('tgt-lang').value;
+    document.getElementById('sum-svc').textContent = svc ? svc.name : '—';
+    var mr = document.getElementById('sum-model-row');
+    mr.style.display = mdl ? '' : 'none';
+    document.getElementById('sum-model').textContent = mdl ? mdl.name : '—';
+    document.getElementById('sum-style').textContent = st ? st.name : '—';
+  }
+  function onServiceChange(){
+    cur.service = document.getElementById('svc-sel').value;
+    buildModels();
+    setSvcNote();
+    updateSummary();
+  }
+  function onModelChange(){
+    cur.model = document.getElementById('model-sel').value;
+    updateSummary();
+  }
+  function showAiCard(){
+    // 低置信/混合语言在进入 AI 设置前先拦截（P2）
+    var srcSel = document.getElementById('src-lang').value;
+    if (srcSel === 'auto' && cur.conf < 1) {
+      document.getElementById('lowconf').style.display = 'flex';
+      alert('自动识别结果不确定（示例：混合语言）。请先明确选择一个受支持的原文语言（中文/英语/日语/韩语/法语/德语）。');
+      return;
+    }
+    document.getElementById('lang-card').style.display = 'none';
+    document.getElementById('ai-card').style.display = 'block';
+    setStep(3);
+    if (!hasCfg()) {
+      // 集中配置未加载（如 SW 缓存了旧脚本）：给出明确提示而非静默失败
+      document.getElementById('ai-loaderr').style.display = 'flex';
+      document.getElementById('ai-body').style.display = 'none';
+      return;
+    }
+    document.getElementById('ai-loaderr').style.display = 'none';
+    document.getElementById('ai-body').style.display = 'block';
+    if (!cur.service || !findService(cur.service)) { cur.style = cur.style || CFG.styles[0].id; buildServices(); }
+    buildStyles();
+    updateSummary();
+  }
+  function backToLang(){
+    document.getElementById('ai-card').style.display = 'none';
+    document.getElementById('lang-card').style.display = 'block';
+    setStep(2);
+  }
+
   function startTask() {
+    if (!hasCfg()) { backToLang(); alert('翻译配置未加载，请刷新页面后重试。'); return; }
+    // 提交时再次校验文件有效性（防止进入 AI 设置后改选无效文件）
+    if (!cur.ok || !cur.name || cur.lang === 'Doc' || cur.lang === 'Scanned') {
+      resetFile();
+      document.getElementById('file-error').innerHTML =
+        '<div class="alert alert-err"><span class="ic">✕</span><span><b>当前文件无法开始处理。</b>请重新选择一个受支持的示例文件（.txt / .epub / 文本型 .pdf）后再提交。</span></div>';
+      alert('当前文件无法开始处理，请重新选择受支持的文件。');
+      return;
+    }
     var srcSel = document.getElementById('src-lang').value;
     // P2：低置信/混合语言不能作为原文语言开始处理
     if (srcSel === 'auto' && cur.conf < 1) {
+      backToLang();
       document.getElementById('lowconf').style.display = 'flex';
       alert('自动识别结果不确定（示例：混合语言）。请选择一个受支持的原文语言（中文/英语/日语/韩语/法语/德语）后再开始处理。');
       return;
     }
-    var src = srcSel === 'auto' ? (LANGS[cur.lang] || cur.lang) : srcSel;
+    var src = finalSrc();
     var tgt = document.getElementById('tgt-lang').value;
     if (src === tgt) { alert('原文语言与目标语言相同，请修改其中一项。'); return; }
 
-    setStep(3);
-    // 写入模拟任务（处理中），进入任务详情
-    V2.setTask({
-      state:'running', name:cur.name, src:src, tgt:tgt,
-      cur: 0, total: 500, startedAt: Date.now(), updatedAt: Date.now()
+    var svc = findService(cur.service);
+    var mdl = findModel(svc, cur.model);
+    var st = findStyle(cur.style);
+    // 创建带稳定 taskId 的模拟任务（含非敏感翻译配置），进入任务详情
+    var task = V2.createTask({
+      name: cur.name, src: src, tgt: tgt,
+      service: svc ? svc.id : null, serviceName: svc ? svc.name : null,
+      model: mdl ? mdl.id : null, modelName: mdl ? mdl.name : null,
+      style: st ? st.id : null, styleName: st ? st.name : null
     });
-    location.href = 'task-detail.html';
+    location.href = 'task-detail.html?id=' + encodeURIComponent(task.id);
   }
 
   // 绑定示例文件

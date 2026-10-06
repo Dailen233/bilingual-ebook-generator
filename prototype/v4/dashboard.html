@@ -83,7 +83,6 @@
 <script src="app.js"></script>
 <script src="topbar.js"></script>
 <script>
-  function logout(){ V2.clearAuth(); location.href='index.html'; }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
   function coverHtml(b, i) {
@@ -107,9 +106,9 @@
     document.getElementById('greet').textContent = '你好，' + u.name;
     document.title = '工作台 · 译伴';
 
+    V2.advanceTasks(Date.now()); // 保持工作台与详情/书库状态一致
     var lib = V2.read(V2.K.library, []);
-    var t = V2.getTask();
-    var running = (t && t.state === 'running') ? [t] : [];
+    var running = V2.getRunningTasks();
     var doneBooks = lib.filter(function(b){ return b.status === 'done'; });
 
     // 精简统计（辅助决策）
@@ -124,10 +123,10 @@
         '<div class="db-continue">'
         + '<div class="db-continue-cover">' + coverHtml(book, 0) + '</div>'
         + '<div class="db-continue-body">'
-        +   '<span class="db-kicker">继续阅读</span>'
+        +   '<span class="db-kicker">开始阅读</span>'
         +   '<h2 class="db-continue-title">' + esc(book.name) + '</h2>'
         +   '<p class="db-continue-meta">' + esc(book.src) + ' → ' + esc(book.tgt) + ' · ' + esc(book.time) + '</p>'
-        +   '<a class="btn btn-primary" href="reader.html?id=' + encodeURIComponent(book.id) + '">继续阅读 →</a>'
+        +   '<a class="btn btn-primary" href="reader.html?id=' + encodeURIComponent(book.id) + '">开始阅读 →</a>'
         + '</div></div>';
     } else {
       hero.innerHTML =
@@ -144,18 +143,18 @@
     // 进行中的任务
     var run = document.getElementById('db-running');
     if (running.length) {
-      var x = running[0];
-      var pct = Math.min(100, Math.round(x.cur / x.total * 100));
-      run.innerHTML =
-        '<div class="db-run-card">'
-        + '<div class="db-run-info">'
-        +   '<span class="db-kicker">处理中</span>'
-        +   '<div class="db-run-title">' + esc(x.name) + '</div>'
-        +   '<div class="db-run-meta">' + esc(x.src) + ' → ' + esc(x.tgt) + ' · ' + x.cur + '/' + x.total + ' 段</div>'
-        +   '<div class="bar gold"><i style="width:' + pct + '%"></i></div>'
-        + '</div>'
-        + '<a class="btn btn-ghost btn-sm" href="task-detail.html">查看详情</a>'
-        + '</div>';
+      run.innerHTML = running.map(function (x) {
+        var pct = Math.min(100, Math.round(x.cur / x.total * 100));
+        return '<div class="db-run-card">'
+          + '<div class="db-run-info">'
+          +   '<span class="db-kicker">处理中</span>'
+          +   '<div class="db-run-title">' + esc(x.name) + '</div>'
+          +   '<div class="db-run-meta">' + esc(x.src) + ' → ' + esc(x.tgt) + ' · ' + x.cur + '/' + x.total + ' 段</div>'
+          +   '<div class="bar gold"><i style="width:' + pct + '%"></i></div>'
+          + '</div>'
+          + '<a class="btn btn-ghost btn-sm" href="task-detail.html?id=' + encodeURIComponent(x.id) + '">查看详情</a>'
+          + '</div>';
+      }).join('');
     } else {
       run.innerHTML =
         '<div class="db-run-empty"><span>暂无进行中的任务</span><a class="link" href="new-task.html">新建任务 →</a></div>';

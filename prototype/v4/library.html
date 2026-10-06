@@ -113,6 +113,7 @@
     document.getElementById('u-mail').textContent = u.mail;
     document.getElementById('u-av').textContent = (u.name||'').charAt(0);
 
+    V2.advanceTasks(Date.now()); // 已完成任务同步入库（幂等）
     var lib = V2.read(V2.K.library, []);
     var q = (document.getElementById('lib-q').value || '').trim().toLowerCase();
     var lang = document.getElementById('lib-lang').value;
@@ -139,11 +140,16 @@
     }
     nomatch.style.display='none'; tableWrap.style.display='';
     body.innerHTML = filtered.map(function(b){
+      var cfg = [];
+      if (b.serviceName) cfg.push(b.serviceName);
+      if (b.styleName) cfg.push(b.styleName);
+      var status = '<span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>已完成</span>';
+      if (b.failedCount > 0) status += ' <span class="badge b-err">含失败单元 × '+b.failedCount+'</span>';
       return '<tr>' +
-        '<td><b style="color:var(--ink)">'+esc(b.name)+'</b></td>' +
+        '<td><b style="color:var(--ink)">'+esc(b.name)+'</b>' + (cfg.length ? '<div class="muted" style="color:var(--faint);font-size:12px;margin-top:2px">'+esc(cfg.join(' · '))+'</div>' : '') + '</td>' +
         '<td>'+esc(b.src)+' → '+esc(b.tgt)+'</td>' +
         '<td><span class="muted" style="color:var(--faint);font-size:13px">'+esc(b.time)+'</span></td>' +
-        '<td><span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>已完成</span></td>' +
+        '<td>'+status+'</td>' +
         '<td style="text-align:right;white-space:nowrap">' +
           '<a class="link" href="reader.html?id='+b.id+'" style="margin-right:14px">阅读</a>' +
           '<a class="link" href="javascript:void(0)" onclick="fakeDl(\'epub\')" style="margin-right:14px">EPUB</a>' +

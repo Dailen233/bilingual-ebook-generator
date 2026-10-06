@@ -6,6 +6,30 @@
 <title>双语阅读 · 译伴 BilingualPress</title>
 <link rel="stylesheet" href="pages.css">
 <link rel="stylesheet" href="topbar.css">
+<style>
+/* 阅读对照：原文-译文逐组配对（本页专用） */
+.rp-head { display:grid; grid-template-columns:1fr 1fr; gap:34px; padding:0 0 10px; margin-bottom:6px; border-bottom:1px solid var(--line); }
+.rp-head span { font-family:var(--sans); font-size:11.5px; letter-spacing:2px; text-transform:uppercase; color:var(--faint); font-weight:700; }
+.reader-pairs { display:flex; flex-direction:column; }
+.rpair { display:grid; grid-template-columns:1fr 1fr; gap:34px; padding:16px 0; border-bottom:1px dashed var(--line); transition:background .15s; }
+.rpair:last-child { border-bottom:none; }
+.rpair .rp-src p, .rpair .rp-tgt p { margin:0; }
+.rpair .rp-src { color:var(--ink); font-family:var(--serif); font-size:15.5px; line-height:1.9; }
+.rpair .rp-tgt { color:var(--jade); font-family:var(--serif); font-size:16px; line-height:1.9; }
+.rpair.hl { background:rgba(199,154,69,.07); border-radius:6px; }
+.reader-body.view-stack .rp-head { display:none; }
+.reader-body.view-stack .rpair { grid-template-columns:1fr; gap:10px; }
+.reader-body.view-stack .rpair .rp-tgt { border-top:1px dashed var(--line); padding-top:12px; }
+.reader-body.fs-1 .rpair .rp-src { font-size:14.5px; } .reader-body.fs-1 .rpair .rp-tgt { font-size:15px; }
+.reader-body.fs-2 .rpair .rp-src { font-size:16.5px; } .reader-body.fs-2 .rpair .rp-tgt { font-size:17px; }
+.reader-body.fs-3 .rpair .rp-src { font-size:18px; } .reader-body.fs-3 .rpair .rp-tgt { font-size:18.5px; }
+@media (max-width:560px) {
+  #vt-split { display:none; }           /* 窄屏只提供上下模式，与强制堆叠布局一致 */
+  .rp-head { display:none; }
+  .rpair { grid-template-columns:1fr; gap:10px; }
+  .rpair .rp-tgt { border-top:1px dashed var(--line); padding-top:12px; }
+}
+</style>
 <meta name="theme-color" content="#1e3a4f">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -57,8 +81,8 @@
 
     <a class="link" href="library.html" style="display:inline-flex;margin-bottom:16px">← 返回书库</a>
 
-    <!-- 阅读器（v3：控制外置，正文最大化 —— 借鉴 Paperturn 方法） -->
-    <div>
+    <!-- 阅读器 -->
+    <div id="reader-wrap">
       <div class="reader-bar reader-tools">
         <div style="min-width:0;flex:1">
           <div class="b-title" id="b-title">—</div>
@@ -79,34 +103,33 @@
       <div class="reader-body fs-2" id="rbody">
         <div class="r-chap">CHAPTER 3 · 第三章</div>
 
-        <div class="reader-cols" id="cols">
-          <div class="rc src">
-            <h4>原文 · English</h4>
-            <p data-idx="0">The fog rolled in from the harbor at dusk.</p>
-            <p data-idx="1">She locked the door and waited.</p>
-            <p data-idx="2">“It would come, in the end,” she told herself.</p>
-            <p data-idx="3">The lighthouse blinked twice, then went dark.</p>
-          </div>
-          <div class="rc tgt">
-            <h4>译文 · 中文</h4>
-            <p data-idx="0">黄昏时分，雾从港口漫了进来。</p>
-            <p data-idx="1">她锁上门，静静地等待。<span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span></p>
-            <p data-idx="2">“终会到来的，”她对自己说。</p>
-            <p data-idx="3">灯塔闪了两次，随后熄灭。</p>
-          </div>
+        <div class="rp-head">
+          <span id="src-label">原文</span>
+          <span id="tgt-label">译文</span>
         </div>
+        <div class="reader-pairs" id="pairs"></div>
 
         <div class="reading-rule"></div>
 
         <div class="meta-row" style="justify-content:space-between;flex-wrap:wrap">
-          <span class="badge b-gold">◇ 对照块 · 同一原文单元与译文同处一块</span>
-          <span style="font-size:13px;color:var(--muted)">点击任意段落可联动高亮原文/译文（对齐示意，非真实对齐结果）</span>
+          <span class="badge b-gold">◇ 对照块 · 同一原文单元与译文同处一组</span>
+          <span style="font-size:13px;color:var(--muted)">点击任意段落可联动高亮该组原文/译文（对齐示意，非真实对齐结果）</span>
         </div>
       </div>
     </div>
 
+    <!-- 无效 / 缺失 bookId -->
+    <div class="card" id="nobook-block" style="display:none">
+      <div class="empty">
+        <div class="glyph">🔖</div>
+        <h3>找不到这本书</h3>
+        <p>链接中的书籍 ID 无效或已被移除，请从书库重新进入。</p>
+        <a class="btn btn-gold" href="library.html">返回书库</a>
+      </div>
+    </div>
+
     <!-- 后续里程碑示意 -->
-    <div class="card" style="margin-top:22px">
+    <div class="card" id="enhance-card" style="margin-top:22px">
       <div class="meta-row" style="margin-bottom:12px"><h2 style="margin:0;font-size:1.1rem">阅读增强（后续里程碑）</h2><span class="badge b-muted">规划中 · 未实现</span></div>
       <p style="font-size:14px;color:var(--muted);margin-bottom:14px">以下能力属于「站内阅读体验」阶段（M4），与处理进度是两个独立需求（P1），本原型仅示意入口，不记录真实数据。</p>
       <div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
@@ -125,9 +148,17 @@
   function fakeDl(k){ alert('示例：下载双语电子书.'+k+'（原型不产生真实文件）'); }
   function soon(f){ alert('「'+f+'」属于后续里程碑（M4 站内阅读体验），本原型未实现，仅示意入口。'); }
 
+  // 示例对照单元（逐组：原文 + 译文）。失败单元仅按总数展示（见副标题），
+  // 无单元明细时不虚构具体失败位置、不把译文回退为原文。
+  var DEMO_UNITS = [
+    { src: 'The fog rolled in from the harbor at dusk.', tgt: '黄昏时分，雾从港口漫了进来。' },
+    { src: 'She locked the door and waited.', tgt: '她锁上门，静静地等待。' },
+    { src: '“It would come, in the end,” she told herself.', tgt: '“终会到来的，”她对自己说。' },
+    { src: 'The lighthouse blinked twice, then went dark.', tgt: '灯塔闪了两次，随后熄灭。' }
+  ];
+
   var FONT_MIN = 1, FONT_MAX = 3;
 
-  // 视图切换（并排/上下），偏好持久化（V3 命名空间，P1 仅存阅读偏好）
   function setView(v, save) {
     var body = document.getElementById('rbody');
     body.classList.toggle('view-stack', v === 'stack');
@@ -137,7 +168,6 @@
   }
   function applyView(v) { setView(v, false); }
 
-  // 字号档位
   function stepFont(d) {
     var p = V3.getReaderPref();
     var f = Math.max(FONT_MIN, Math.min(FONT_MAX, (p.font || 2) + d));
@@ -150,22 +180,18 @@
     body.classList.add('fs-' + f);
   }
 
-  // 段落联动高亮（点击任一段，原文/译文同序号高亮；示意对齐，非真实结果）
+  // 段落联动高亮：点击任一组，原文/译文整组高亮（示意对齐，非真实结果）
   function bindSync() {
-    var ps = document.querySelectorAll('#cols p[data-idx]');
-    ps.forEach(function (p) {
-      p.style.cursor = 'pointer';
-      p.addEventListener('click', function () {
-        var idx = p.dataset.idx;
-        document.querySelectorAll('#cols p.hl-src, #cols p.hl-tgt').forEach(function (x) {
-          x.classList.remove('hl-src','hl-tgt');
+    document.querySelectorAll('.rpair').forEach(function (rp) {
+      rp.querySelectorAll('p').forEach(function (p) {
+        p.style.cursor = 'pointer';
+        p.addEventListener('click', function () {
+          document.querySelectorAll('.rpair.hl').forEach(function (x) { x.classList.remove('hl'); });
+          rp.classList.add('hl');
+          var idx = parseInt(rp.dataset.idx, 10);
+          var total = document.querySelectorAll('.rpair').length;
+          document.getElementById('r-prog').innerHTML = '第 <b>' + (idx + 1) + '</b> / ' + total + ' 段';
         });
-        document.querySelectorAll('#cols p[data-idx="'+idx+'"]').forEach(function (x) {
-          var col = x.closest('.rc');
-          x.classList.add(col && col.classList.contains('src') ? 'hl-src' : 'hl-tgt');
-        });
-        var total = document.querySelectorAll('#cols .rc.src p[data-idx]').length;
-        document.getElementById('r-prog').innerHTML = '第 <b>' + (parseInt(idx,10)+1) + '</b> / ' + total + ' 段';
       });
     });
   }
@@ -177,21 +203,61 @@
     document.getElementById('u-mail').textContent = u.mail;
     document.getElementById('u-av').textContent = (u.name||'').charAt(0);
 
+    // 按 URL bookId 精确读取；无效/缺失 id 给出明确提示，不自动显示另一册
     var id = new URLSearchParams(location.search).get('id');
     var lib = V2.read(V2.K.library, []);
-    var b = lib.filter(function(x){ return x.id === id; })[0] || lib[0] || { name:'The Harbor Fog · 港口雾', src:'英语', tgt:'中文' };
+    var b = null;
+    if (id) {
+      for (var i = 0; i < lib.length; i++) if (lib[i].id === id) { b = lib[i]; break; }
+    }
+    if (!b) {
+      document.getElementById('reader-wrap').style.display = 'none';
+      document.getElementById('enhance-card').style.display = 'none';
+      document.getElementById('nobook-block').style.display = 'block';
+      document.title = '双语阅读 · 译伴';
+      return;
+    }
+    document.getElementById('reader-wrap').style.display = '';
+    document.getElementById('enhance-card').style.display = '';
+    document.getElementById('nobook-block').style.display = 'none';
+
     document.getElementById('b-title').textContent = b.name;
-    document.getElementById('b-sub').textContent = b.src + ' → ' + b.tgt + ' · 示例占位译文';
+    // 标题下展示服务/模型/风格/失败单元数（配置随书，不串书）
+    var sub = (b.src || '') + ' → ' + (b.tgt || '');
+    if (b.serviceName) sub += ' · ' + b.serviceName;
+    if (b.modelName) sub += ' · ' + b.modelName;
+    if (b.styleName) sub += ' · ' + b.styleName;
+    sub += ' · 示例占位译文';
+    if (b.failedCount > 0) sub += ' · 含失败单元 × ' + b.failedCount;
+    document.getElementById('b-sub').textContent = sub;
+    document.getElementById('src-label').textContent = '原文 · ' + (b.src || '原文');
+    document.getElementById('tgt-label').textContent = '译文 · ' + (b.tgt || '译文');
+
+    // 逐组渲染
+    document.getElementById('pairs').innerHTML = DEMO_UNITS.map(function (u, i) {
+      return '<div class="rpair" data-idx="' + i + '">'
+        + '<div class="rp-src"><p>' + esc(u.src) + '</p></div>'
+        + '<div class="rp-tgt"><p>' + esc(u.tgt) + '</p></div>'
+        + '</div>';
+    }).join('');
     document.title = b.name + ' · 双语阅读';
 
-    // 应用阅读偏好：手机默认上下对照，桌面默认并排（无显式偏好时按视口）
-    var pref = V3.getReaderPref();
-    var mobile = window.matchMedia('(max-width:560px)').matches;
-    var initialView = pref.view || (mobile ? 'stack' : 'split');
-    applyView(initialView);
-    applyFont(pref.font || 2);
+    applyFont(V3.getReaderPref().font || 2);
+    syncView();
     bindSync();
   }
+
+  // 视口跨越 560px 时同步布局与按钮选中状态；applyView 不持久化，保留桌面阅读偏好
+  var mqNarrow = window.matchMedia('(max-width:560px)');
+  function syncView() {
+    var pref = V3.getReaderPref();
+    applyView(mqNarrow.matches ? 'stack' : (pref.view || 'split'));
+  }
+  function onMqChange() { syncView(); }
+  if (mqNarrow.addEventListener) mqNarrow.addEventListener('change', onMqChange);
+  else if (mqNarrow.addListener) mqNarrow.addListener(onMqChange);
+  window.addEventListener('resize', onMqChange);
+
   render();
 </script>
 </body>

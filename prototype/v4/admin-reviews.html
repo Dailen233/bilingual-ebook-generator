@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>举报 / 审核 · 译伴后台</title>
+<link rel="stylesheet" href="pages.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar admin-topbar">
+  <div class="wrap">
+    <a class="admin-brand" href="admin.html">
+      <span class="seal">管</span>
+      <b>译伴 · 管理后台</b>
+      <span class="tag">独立入口</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="admin.html">概览</a>
+      <a href="admin-tasks.html">任务 / 失败</a>
+      <a href="admin-reviews.html" class="active">举报 / 审核</a>
+      <a href="admin-login.html" onclick="return adminLogout()" style="cursor:pointer">退出</a>
+    </nav>
+    <span class="spacer"></span>
+    <div class="admin-user"><span class="av">管</span><span>管理员</span></div>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单" style="border-color:#2c465e;background:#17293a"><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span></button>
+  </div>
+</header>
+<div id="mobile-nav" class="admin">
+  <a href="admin.html">概览</a>
+  <a href="admin-tasks.html">任务 / 失败</a>
+  <a href="admin-reviews.html" class="active">举报 / 审核</a>
+  <div class="mn-foot"><a href="admin-login.html" onclick="return adminLogout()" style="font-size:13px;color:#7f95a8;cursor:pointer">退出（模拟）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+  <div class="wrap">
+
+    <div class="sim-bar" style="margin-bottom:16px">
+      <span>◆ 举报/审核为<b>原型模拟</b>示例，不接后端；处置与留痕为演示，非真实安全能力。</span>
+    </div>
+    <div class="alert alert-warn" style="margin-bottom:22px">
+      <span class="ic">⚠</span>
+      <span><b>审核边界（G11 / P13 设计假设）：</b>管理员查看用户文件内容仅限<b>具体审核事项中</b>，且每次查看<b>写入操作日志</b>（操作人/时间/对象/原因）；<b>不提供</b>无条件批量浏览用户私有内容的入口。<b>不承诺</b>自动识别全部违法或色情内容——审核以「用户举报 + 人工处理」为主，自动化检测仅作辅助候选（未承诺）。</span>
+    </div>
+
+    <div class="page-head">
+      <div><h1>举报 / 审核队列</h1><div class="sub">待审核 → 查看（留痕）→ 处置 → 记录</div></div>
+      <span class="spacer"></span>
+      <span class="badge b-warn" id="queue-count">2 项待处理</span>
+    </div>
+
+    <div class="grid grid-2">
+      <!-- 队列 -->
+      <div class="card">
+        <h2 style="font-size:1.1rem">待处理举报</h2>
+        <div class="stack" id="queue">
+          <div class="tile" style="cursor:pointer" onclick="openReview('A103')">
+            <div class="thumb" style="background:var(--warn-bg);color:var(--warn)">!</div>
+            <div class="info"><div class="t">#A103 · 疑似违规内容</div><div class="s">举报人：u_21 → 对象书籍《…》（u_88）</div></div>
+            <div class="act"><span class="badge b-warn">待审核</span></div>
+          </div>
+          <div class="tile" style="cursor:pointer" onclick="openReview('A102')">
+            <div class="thumb" style="background:var(--warn-bg);color:var(--warn)">!</div>
+            <div class="info"><div class="t">#A102 · 侵权/版权举报</div><div class="s">举报人：u_52 → 对象书籍《…》（u_33）</div></div>
+            <div class="act"><span class="badge b-warn">待审核</span></div>
+          </div>
+          <div class="tile" style="opacity:.7">
+            <div class="thumb" style="background:var(--panel-2);color:var(--faint)">✓</div>
+            <div class="info"><div class="t">#A101 · 违规内容举报</div><div class="s">举报人：u_7 → 对象书籍《…》（u_14）</div></div>
+            <div class="act"><span class="badge b-ok">已驳回</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 详情 -->
+      <div class="card">
+        <h2 style="font-size:1.1rem">审核详情 <span class="badge b-muted" id="rv-id" style="margin-left:6px">—</span></h2>
+        <div id="rv-body">
+          <div class="empty"><div class="glyph">🛡️</div><h3>选择左侧一项</h3><p>查看举报详情；查看用户文件内容需留痕。</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 留痕日志 -->
+    <div class="card" style="margin-top:22px">
+      <h2 style="font-size:1.1rem">本次操作留痕（实时示例）</h2>
+      <ul class="log" id="audit">
+        <li><div class="t">系统：进入审核队列</div><div class="time" id="audit-time">—</div></li>
+      </ul>
+    </div>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function now(){ return new Date().toLocaleString('zh-CN'); }
+  function log(msg){
+    var ul = document.getElementById('audit');
+    var li = document.createElement('li');
+    li.innerHTML = '<div class="t">'+esc(msg)+'</div><div class="time">'+now()+'</div>';
+    ul.insertBefore(li, ul.firstChild);
+  }
+  var REVIEWS = {
+    A103: { title:'疑似违规内容', reporter:'u_21', target:'u_88 · 《…》', reason:'举报人称译文区含不当内容', snippet:'（用户私有内容片段，需审核权限查看）' },
+    A102: { title:'侵权/版权举报', reporter:'u_52', target:'u_33 · 《…》', reason:'举报人主张上传文件侵犯版权', snippet:'（用户私有内容片段，需审核权限查看）' }
+  };
+  function openReview(id){
+    var r = REVIEWS[id]; if(!r) return;
+    document.getElementById('rv-id').textContent = id;
+    document.getElementById('rv-body').innerHTML =
+      '<div class="field"><label>事项</label><div style="font-weight:600;color:var(--ink)">'+esc(r.title)+'</div></div>' +
+      '<div class="field"><label>举报人 → 对象</label><div style="font-size:14px">'+esc(r.reporter)+' → '+esc(r.target)+'</div></div>' +
+      '<div class="field"><label>举报理由</label><div style="font-size:14px;color:var(--muted)">'+esc(r.reason)+'</div></div>' +
+      '<div class="alert alert-info" style="margin:14px 0"><span class="ic">🔒</span><span>用户文件内容默认私有。点击查看将<b>写入操作留痕</b>（审核上下文内，P13 设计假设）。</span></div>' +
+      '<button class="btn btn-ghost btn-sm" onclick="viewContent(\''+id+'\')">查看文件内容（留痕）</button>' +
+      '<div id="rv-content" style="display:none;margin-top:14px;padding:14px;border:1px dashed var(--line);border-radius:10px;background:var(--panel-2);font-size:14px;color:var(--muted)">'+esc(r.snippet)+'</div>' +
+      '<div class="divider">处置</div>' +
+      '<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">' +
+        '<button class="btn btn-ghost btn-sm" onclick="dispose(\''+id+'\',\'通过（内容合规）\')">通过</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="dispose(\''+id+'\',\'驳回/屏蔽\')">驳回 / 屏蔽用户</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="dispose(\''+id+'\',\'上报\')">上报</button>' +
+      '</div>';
+    log('打开审核详情 '+id+'（仅查看元数据，未查看文件内容）');
+  }
+  function viewContent(id){
+    document.getElementById('rv-content').style.display = 'block';
+    log('管理员查看了举报 '+id+' 的用户文件内容（原因：举报审核需要）——已留痕');
+  }
+  function dispose(id, act){
+    log('处置举报 '+id+'：'+act+'（已写入处理记录，将通知当事人并说明）');
+    alert('（模拟）已处置 '+id+'：'+act+'。\n真实系统中：处置可追溯、对当事人有可感知状态变化（4.5）；本原型不接后端。');
+  }
+  if (V2.isAdmin()) document.getElementById('audit-time').textContent = now(); // 未登录管理员已重定向，不初始化
+</script>
+</body>
+</html>

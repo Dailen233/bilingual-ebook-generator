@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理概览 · 译伴后台</title>
+<link rel="stylesheet" href="styles.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar admin-topbar">
+  <div class="wrap">
+    <a class="admin-brand" href="admin.html">
+      <span class="seal">管</span>
+      <b>译伴 · 管理后台</b>
+      <span class="tag">独立入口</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="admin.html" class="active">概览</a>
+      <a href="admin-tasks.html">任务 / 失败</a>
+      <a href="admin-reviews.html">举报 / 审核</a>
+      <a href="admin-login.html" onclick="return adminLogout()" style="cursor:pointer">退出</a>
+    </nav>
+    <span class="spacer"></span>
+    <div class="admin-user"><span class="av">管</span><span>管理员</span></div>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单" style="border-color:#2c465e;background:#17293a"><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span></button>
+  </div>
+</header>
+<div id="mobile-nav" class="admin">
+  <a href="admin.html" class="active">概览</a>
+  <a href="admin-tasks.html">任务 / 失败</a>
+  <a href="admin-reviews.html">举报 / 审核</a>
+  <div class="mn-foot"><a href="admin-login.html" onclick="return adminLogout()" style="font-size:13px;color:#7f95a8;cursor:pointer">退出（模拟）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+  <div class="wrap">
+
+    <div class="sim-bar" style="margin-bottom:22px">
+      <span>◆ 管理端为<b>原型模拟</b>：数据为示例，不接后端；权限与留痕为演示效果，非真实安全能力。</span>
+      <span class="sim-tag" style="margin-left:auto">首个真实里程碑：管理端先覆盖任务与失败记录（P14 设计假设）</span>
+    </div>
+
+    <div class="page-head">
+      <div><h1>管理概览</h1><div class="sub">用户与权限 · 任务与失败 · 资源用量 · 举报/审核 · 处理记录</div></div>
+      <span class="spacer"></span>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:26px">
+      <div class="card stat hoverable"><div class="k">用户总数</div><div class="v">128</div></div>
+      <div class="card stat jade hoverable"><div class="k">今日任务</div><div class="v">34</div></div>
+      <div class="card stat gold hoverable"><div class="k">待审核举报</div><div class="v">3</div></div>
+      <div class="card stat hoverable"><div class="k">失败任务（近7日）</div><div class="v">5</div></div>
+    </div>
+
+    <div class="grid grid-3">
+      <a class="card feat hoverable" href="admin-tasks.html" style="text-decoration:none">
+        <div class="ic">🗂️</div><h3>任务 / 失败记录</h3>
+        <p>全量任务、失败原因、资源用量。首个真实里程碑管理端优先覆盖此项。</p>
+      </a>
+      <a class="card feat hoverable" href="admin-reviews.html" style="text-decoration:none">
+        <div class="ic">🛡️</div><h3>举报 / 审核</h3>
+        <p>举报队列、处置与留痕。查看用户文件内容仅限具体审核事项并记录操作（P13 设计假设）。</p>
+      </a>
+      <div class="card feat hoverable">
+        <div class="ic">👥</div><h3>用户与权限</h3>
+        <p>用户列表、角色、启用/停用（后续里程碑 M2，本原型示意）。</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <h2 style="font-size:1.1rem">处理记录（操作日志 · 示例）</h2>
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:14px">谁、何时、做了什么，含管理员查看文件留痕（4.5）。</p>
+      <ul class="log">
+        <li><div class="t">管理员查看了举报 #A102 相关文件内容</div><div class="d">对象：用户 u_88 的书籍《…》；原因：举报审核需要；已写入留痕</div><div class="time">2026-09-24 10:12</div></li>
+        <li><div class="t">处置举报 #A101：驳回（内容合规）</div><div class="d">已通知当事人并说明</div><div class="time">2026-09-23 16:40</div></li>
+        <li><div class="t">系统：任务 T-2041 失败（翻译服务超时，重试耗尽）</div><div class="d">进入失败记录，可运维查看</div><div class="time">2026-09-23 09:02</div></li>
+      </ul>
+    </div>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  function adminLogout(){ V2.clearAuth(); location.href='admin-login.html'; return false; }
+  if (!V2.requireAdmin()) {}
+</script>
+</body>
+</html>

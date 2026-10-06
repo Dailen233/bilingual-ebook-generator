@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理概览 · 译伴后台</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="stylesheet" href="admin.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar admin-topbar">
+  <div class="wrap">
+    <a class="admin-brand" href="admin.html">
+      <span class="seal">管</span>
+      <b>译伴 · 管理后台</b>
+      <span class="tag">独立入口</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="admin.html" class="active">概览</a>
+      <a href="admin-tasks.html">任务 / 失败</a>
+      <a href="admin-reviews.html">举报 / 审核</a>
+      <a href="admin-login.html" onclick="return adminLogout()" style="cursor:pointer">退出</a>
+    </nav>
+    <span class="spacer"></span>
+    <div class="admin-user"><span class="av">管</span><span>管理员</span></div>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单" style="border-color:#2c465e;background:#17293a"><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span><span style="background:#a9bccb"></span></button>
+  </div>
+</header>
+<div id="mobile-nav" class="admin">
+  <a href="admin.html" class="active">概览</a>
+  <a href="admin-tasks.html">任务 / 失败</a>
+  <a href="admin-reviews.html">举报 / 审核</a>
+  <div class="mn-foot"><a href="admin-login.html" onclick="return adminLogout()" style="font-size:13px;color:#7f95a8;cursor:pointer">退出（模拟）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+  <div class="wrap">
+
+    <div class="sim-bar" style="margin-bottom:22px">
+      <span>◆ 管理端为<b>原型模拟</b>：数据为示例，不接后端；权限与留痕为演示效果，非真实安全能力。</span>
+      <span class="sim-tag" style="margin-left:auto">首个真实里程碑：管理端先覆盖任务与失败记录（P14 设计假设）</span>
+    </div>
+
+    <div class="page-head">
+      <div><h1>管理概览</h1><div class="sub">先处理待办事项，再查看运行数据与操作留痕。</div></div>
+      <span class="spacer"></span>
+      <span class="badge b-muted">数据更新于刚刚</span>
+    </div>
+
+    <h2 class="section-label">待处理事项</h2>
+    <div class="grid grid-2">
+      <a class="task-card tc-warn" href="admin-reviews.html">
+        <div class="tc-icon">🛡️</div>
+        <div class="tc-body">
+          <div class="tc-title">举报待审核</div>
+          <div class="tc-desc">3 项举报等待人工审核与处置</div>
+        </div>
+        <div class="tc-num">3</div>
+        <div class="tc-cta">去审核</div>
+      </a>
+      <a class="task-card tc-err" href="admin-tasks.html">
+        <div class="tc-icon">⚠</div>
+        <div class="tc-body">
+          <div class="tc-title">任务失败</div>
+          <div class="tc-desc">近 7 日 5 个任务失败，需运维查看</div>
+        </div>
+        <div class="tc-num">5</div>
+        <div class="tc-cta">查看记录</div>
+      </a>
+    </div>
+
+    <h2 class="section-label">运行数据</h2>
+    <div class="stat-strip">
+      <div class="ss-item"><span class="ss-k">用户总数</span><span class="ss-v">128</span></div>
+      <div class="ss-div"></div>
+      <div class="ss-item"><span class="ss-k">今日任务</span><span class="ss-v">34</span></div>
+    </div>
+
+    <h2 class="section-label">近期操作日志</h2>
+    <div class="card">
+      <ul class="log">
+        <li><div class="t">管理员查看了举报 #A102 相关文件内容</div><div class="d">对象：用户 u_88 的书籍《…》；原因：举报审核需要；已写入留痕</div><div class="time">2026-09-24 10:12</div></li>
+        <li><div class="t">处置举报 #A101：驳回（内容合规）</div><div class="d">已通知当事人并说明</div><div class="time">2026-09-23 16:40</div></li>
+        <li><div class="t">系统：任务 T-2041 失败（翻译服务超时，重试耗尽）</div><div class="d">进入失败记录，可运维查看</div><div class="time">2026-09-23 09:02</div></li>
+      </ul>
+    </div>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  // 管理员登录态路由（adminRouteGuard）与退出（adminLogout）由 app.js 统一处理
+</script>
+</body>
+</html>

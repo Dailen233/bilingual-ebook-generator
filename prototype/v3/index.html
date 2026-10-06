@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>译伴 BilingualPress — 同一本书，两种语言</title>
+<link rel="stylesheet" href="styles.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="seal">译</span>
+      <span>
+        <span class="name">译伴 BilingualPress</span>
+        <span class="sub">双语阅读伴侣</span>
+      </span>
+    </a>
+    <nav class="nav">
+      <a href="index.html" class="active">首页</a>
+      <a href="dashboard.html">工作台</a>
+      <a href="library.html">我的书库</a>
+    </nav>
+    <span class="spacer"></span>
+    <a class="btn btn-ghost btn-sm" href="login.html" style="display:none" id="cta-login">登录</a>
+    <a class="btn btn-ghost btn-sm" href="login.html" id="cta-install" style="display:none">⬇ 安装应用</a>
+    <a class="btn btn-primary btn-sm" href="login.html" id="cta-start">开始使用</a>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单"><span></span><span></span><span></span></button>
+  </div>
+</header>
+<div id="mobile-nav">
+  <a href="index.html" class="active">首页</a>
+  <a href="dashboard.html">工作台</a>
+  <a href="library.html">我的书库</a>
+  <a href="login.html">登录 / 注册</a>
+  <div class="mn-foot"><a href="admin-login.html" style="font-size:13px;color:var(--faint)">管理端入口（独立）</a></div>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+
+  <!-- ============ Hero（结构方法参考 Reedsy Studio：深色全幅 · 居中衬线标题 · 产品画面压轴；素材/文案原创） ============ -->
+  <section class="hero-ed">
+    <div class="wrap-ed">
+      <span class="ed-eyebrow">Bilingual Ebook Studio</span>
+      <h1 class="ed-title">同一本书，<span class="em">两种语言</span></h1>
+      <p class="ed-lead">上传电子书，AI 逐段翻译成原文与译文对照排版，一键导出 <span class="nw">EPUB / PDF</span>。</p>
+      <div class="ed-cta">
+        <a class="btn btn-gold" href="login.html">开始使用 →</a>
+        <a class="ed-link" href="#how">三步流程 ↓</a>
+      </div>
+
+      <!-- 产品画面：双语阅读器，原文/译文逐段对应（步进高亮为纯 CSS） -->
+      <div class="reader-shot" role="img" aria-label="双语阅读器界面示意：原文与译文逐段对照">
+        <div class="rs-bar">
+          <span class="rs-dot"></span><span class="rs-dot"></span><span class="rs-dot"></span>
+          <span class="rs-title">The Harbor Fog · 港口雾</span>
+          <span class="rs-prog">第 1 / 3 段</span>
+        </div>
+        <div class="rs-cols">
+          <div class="rs-head"><span>原 文</span><span>译 文</span></div>
+          <div class="rs-pair">
+            <p class="rs-src">The fog rolled in from the harbor at dusk.</p>
+            <p class="rs-tgt">黄昏时分，雾从港口漫了进来。</p>
+          </div>
+          <div class="rs-pair">
+            <p class="rs-src">She locked the door and waited.</p>
+            <p class="rs-tgt">她锁上门，静静等候。</p>
+          </div>
+          <div class="rs-pair">
+            <p class="rs-src">“It would come, in the end,” she told herself.</p>
+            <p class="rs-tgt">“终会到来的，”她对自己说。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 词典条：editorial 细节（借鉴 Reedsy 的 definition 方法，文案原创） -->
+  <section class="defn">
+    <div class="wrap">
+      <p>「双语电子书」 <span class="defn-en">/ˌbaɪˈlɪŋɡwəl iːˈbʊk/</span> · 名词 — 同一册书，原文与译文逐段并列的版本。</p>
+    </div>
+  </section>
+
+  <!-- ============ 使用步骤（Lulu 方法：一屏一焦点，三步卡片化） ============ -->
+  <section id="how" class="section-gap band-ink">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">How it works</span>
+        <h2>三步，得到你的双语书</h2>
+        <p>主流程尽量压缩为「上传 → 选语言 → 下载」，处理期间可随时离开，回来查看进度与结果。</p>
+      </div>
+      <div class="flow">
+        <div class="card feat f-card hoverable">
+          <span class="num">1</span>
+          <h3>上传一本书</h3>
+          <p>支持 .txt / .epub / .pdf（文本型）。系统提取正文与章节，过滤页眉页脚、目录等噪音。</p>
+        </div>
+        <div class="card feat f-card hoverable">
+          <span class="num">2</span>
+          <h3>确认语言，开始处理</h3>
+          <p>原文语言默认自动识别，可手动修改；选择目标语言后提交。任务后台处理，展示进度。</p>
+        </div>
+        <div class="card feat f-card hoverable">
+          <span class="num">3</span>
+          <h3>预览、下载、再找到</h3>
+          <p>对照预览，下载 EPUB / PDF，并在个人书库中随时再次找到与重新下载。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 特性 ============ -->
+  <section class="section-gap">
+    <div class="wrap">
+      <div class="grid grid-4">
+        <div class="card feat hoverable"><div class="ic">¶</div><h3>逐段对照</h3><p>原文与译文按段对应，并排 / 上下两种视图。</p></div>
+        <div class="card feat hoverable"><div class="ic">字</div><h3>多语互译</h3><p>中、英、日、韩、法、德，自由选择互译方向。</p></div>
+        <div class="card feat hoverable"><div class="ic">卷</div><h3>长书可离开</h3><p>任务后台处理、进度可见；关掉页面回来接着看。</p></div>
+        <div class="card feat hoverable"><div class="ic">屏</div><h3>移动友好</h3><p>响应式网页 + 可安装 PWA，手机上完成上传、阅读、下载。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 开始使用 CTA ============ -->
+  <section class="section-gap">
+    <div class="wrap">
+      <div class="card pad-lg" style="text-align:center">
+        <span class="eyebrow" style="font-size:12.5px;letter-spacing:3px;color:var(--gold);font-weight:600">Ready when you are</span>
+        <h2 style="font-size:1.8rem;margin:10px 0 8px">开始把你的书，变成双语书</h2>
+        <p style="color:var(--muted);max-width:520px;margin:0 auto 22px">登录后上传第一本书，几步得到可下载的双语电子书。</p>
+        <div class="cta" style="justify-content:center">
+          <a class="btn btn-primary" href="login.html">登录 / 注册</a>
+        </div>
+        <p style="margin-top:16px;font-size:12.5px;color:var(--faint)">管理员请使用<a class="link" href="admin-login.html" style="font-size:12.5px">独立管理端入口</a></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <span>译伴 BilingualPress — 高保真原型 · 示例数据 · 不接真实后端</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+  // 已登录则显示“工作台”为主入口
+  if (V2 && V2.isUser()) {
+    var c = document.getElementById('cta-start');
+    c.textContent = '进入工作台'; c.href = 'dashboard.html';
+  }
+  // PWA 可安装（G10）：浏览器触发 beforeinstallprompt 时显示安装按钮
+  var _installEvt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    _installEvt = e;
+    var b = document.getElementById('cta-install');
+    if (b) b.style.display = 'inline-flex';
+  });
+  document.addEventListener('DOMContentLoaded', function () {
+    var b = document.getElementById('cta-install');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      if (!_installEvt) return;
+      _installEvt.prompt();
+      _installEvt.userChoice.then(function () {
+        b.style.display = 'none';
+        _installEvt = null;
+      });
+    });
+  });
+</script>
+</body>
+</html>

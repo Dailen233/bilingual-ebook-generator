@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理端登录 · 译伴 BilingualPress</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="stylesheet" href="admin-login.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar admin-topbar">
+  <div class="wrap">
+    <a class="admin-brand" href="admin.html">
+      <span class="seal">管</span>
+      <b><span class="wm">译伴</span> · 管理后台</b>
+      <span class="tag">独立入口</span>
+    </a>
+    <span class="spacer"></span>
+    <a class="btn btn-ghost btn-sm" href="index.html" style="background:transparent;color:#a9bccb;border-color:#2c465e">← 返回用户端</a>
+  </div>
+</header>
+
+<main>
+  <div class="auth">
+    <div class="form-side">
+      <div class="form-card">
+        <div class="admin-identity">
+          <span class="seal">管</span>
+          <div>
+            <h1>管理员登录</h1>
+            <p>译伴 BilingualPress · 管理后台 · 独立入口</p>
+          </div>
+        </div>
+
+        <div class="demo-note" role="note">
+          <span class="demo-badge">仅供原型演示</span>
+          <span class="demo-text">本原型管理登录为模拟：不校验真实凭据、不接后端；权限仅为演示效果，非真实安全能力。</span>
+        </div>
+
+        <form onsubmit="return doAdminLogin(event)">
+          <div class="field">
+            <label for="amail">管理员账号</label>
+            <input class="input" id="amail" type="text" value="admin@example.com">
+            <div class="hint-line">示例管理员账号，可直接登录体验</div>
+          </div>
+          <div class="field">
+            <label for="apwd">密码</label>
+            <input class="input" id="apwd" type="password" value="••••••••">
+          </div>
+          <div id="alogin-err" class="alert alert-err" style="display:none;margin-bottom:14px"></div>
+          <button class="btn btn-primary btn-block" type="submit">登录后台（模拟）</button>
+        </form>
+        <p class="foot">
+          普通用户请前往<a href="login.html">用户端登录</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  function doAdminLogin(e){
+    e.preventDefault();
+    var mail = document.getElementById('amail').value.trim();
+    var pwd = document.getElementById('apwd').value;
+    var box = document.getElementById('alogin-err');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail) || !pwd) {
+      box.innerHTML = '<span class="ic">✕</span><span>请输入有效的管理员账号与密码（模拟：不校验真实凭据）。</span>';
+      box.style.display = 'flex';
+      return false;
+    }
+    V2.setAdmin(); location.href='admin.html'; return false;
+  }
+</script>
+</body>
+</html>

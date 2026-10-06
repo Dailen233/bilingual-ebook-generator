@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双语阅读 · 译伴 BilingualPress</title>
+<link rel="stylesheet" href="styles.css">
+<meta name="theme-color" content="#1e3a4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="seal">译</span>
+      <span><span class="name">译伴 BilingualPress</span><span class="sub">双语阅读伴侣</span></span>
+    </a>
+    <nav class="nav">
+      <a href="dashboard.html">工作台</a>
+      <a href="new-task.html">创建任务</a>
+      <a href="library.html">我的书库</a>
+    </nav>
+    <span class="spacer"></span>
+    <div class="user-chip"><span class="av" id="u-av">林</span><span><span class="u-name" id="u-name">林一舟</span><br><span class="u-mail" id="u-mail">yizhou@example.com</span></span></div>
+    <button class="menu-btn" id="menu-btn" aria-label="菜单"><span></span><span></span><span></span></button>
+  </div>
+</header>
+<div id="mobile-nav">
+  <a href="dashboard.html">工作台</a>
+  <a href="new-task.html">创建任务</a>
+  <a href="library.html">我的书库</a>
+</div>
+<div id="nav-mask"></div>
+
+<main class="page-main">
+  <div class="wrap-narrow">
+
+    <div class="sim-bar" style="margin-bottom:22px">
+      <span>◆ 阅读内容为<b>示例占位译文</b>；书签、阅读位置为后续里程碑（本原型仅示意入口，不记录真实位置）。</span>
+    </div>
+
+    <a class="link" href="library.html" style="display:inline-flex;margin-bottom:16px">← 返回书库</a>
+
+    <!-- 阅读器（v3：控制外置，正文最大化 —— 借鉴 Paperturn 方法） -->
+    <div>
+      <div class="reader-bar reader-tools">
+        <div style="min-width:0;flex:1">
+          <div class="b-title" id="b-title">—</div>
+          <div class="b-sub" id="b-sub">—</div>
+        </div>
+        <div class="rt-group" role="group" aria-label="对照视图">
+          <button class="rt-btn" id="vt-split" onclick="setView('split')">并排</button>
+          <button class="rt-btn" id="vt-stack" onclick="setView('stack')">上下</button>
+        </div>
+        <div class="rt-group" role="group" aria-label="字号">
+          <button class="rt-btn" onclick="stepFont(-1)" aria-label="缩小字号">A−</button>
+          <button class="rt-btn" onclick="stepFont(1)" aria-label="放大字号">A＋</button>
+        </div>
+        <span class="rt-prog" id="r-prog">第 <b>1</b> / 4 段</span>
+        <button class="btn btn-ghost btn-sm" onclick="fakeDl('epub')">下载 EPUB</button>
+        <button class="btn btn-ghost btn-sm" onclick="fakeDl('pdf')">下载 PDF</button>
+      </div>
+      <div class="reader-body fs-2" id="rbody">
+        <div class="r-chap">CHAPTER 3 · 第三章</div>
+
+        <div class="reader-cols" id="cols">
+          <div class="rc src">
+            <h4>原文 · English</h4>
+            <p data-idx="0">The fog rolled in from the harbor at dusk.</p>
+            <p data-idx="1">She locked the door and waited.</p>
+            <p data-idx="2">“It would come, in the end,” she told herself.</p>
+            <p data-idx="3">The lighthouse blinked twice, then went dark.</p>
+          </div>
+          <div class="rc tgt">
+            <h4>译文 · 中文</h4>
+            <p data-idx="0">黄昏时分，雾从港口漫了进来。</p>
+            <p data-idx="1">她锁上门，静静地等待。<span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span></p>
+            <p data-idx="2">“终会到来的，”她对自己说。</p>
+            <p data-idx="3">灯塔闪了两次，随后熄灭。</p>
+          </div>
+        </div>
+
+        <div class="reading-rule"></div>
+
+        <div class="meta-row" style="justify-content:space-between;flex-wrap:wrap">
+          <span class="badge b-gold">◇ 对照块 · 同一原文单元与译文同处一块</span>
+          <span style="font-size:13px;color:var(--muted)">点击任意段落可联动高亮原文/译文（对齐示意，非真实对齐结果）</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 后续里程碑示意 -->
+    <div class="card" style="margin-top:22px">
+      <div class="meta-row" style="margin-bottom:12px"><h2 style="margin:0;font-size:1.1rem">阅读增强（后续里程碑）</h2><span class="badge b-muted">规划中 · 未实现</span></div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:14px">以下能力属于「站内阅读体验」阶段（M4），与处理进度是两个独立需求（P1），本原型仅示意入口，不记录真实数据。</p>
+      <div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="soon('书签（FR-12）')">＋ 添加书签</button>
+        <button class="btn btn-ghost" onclick="soon('阅读位置 / 继续阅读（FR-13）')">从上次位置继续</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function fakeDl(k){ alert('示例：下载双语电子书.'+k+'（原型不产生真实文件）'); }
+  function soon(f){ alert('「'+f+'」属于后续里程碑（M4 站内阅读体验），本原型未实现，仅示意入口。'); }
+
+  var FONT_MIN = 1, FONT_MAX = 3;
+
+  // 视图切换（并排/上下），偏好持久化（V3 命名空间，P1 仅存阅读偏好）
+  function setView(v, save) {
+    var body = document.getElementById('rbody');
+    body.classList.toggle('view-stack', v === 'stack');
+    document.getElementById('vt-split').classList.toggle('active', v === 'split');
+    document.getElementById('vt-stack').classList.toggle('active', v === 'stack');
+    if (save !== false) V3.setReaderPref({ view: v });
+  }
+  function applyView(v) { setView(v, false); }
+
+  // 字号档位
+  function stepFont(d) {
+    var p = V3.getReaderPref();
+    var f = Math.max(FONT_MIN, Math.min(FONT_MAX, (p.font || 2) + d));
+    V3.setReaderPref({ font: f });
+    applyFont(f);
+  }
+  function applyFont(f) {
+    var body = document.getElementById('rbody');
+    body.classList.remove('fs-1','fs-2','fs-3');
+    body.classList.add('fs-' + f);
+  }
+
+  // 段落联动高亮（点击任一段，原文/译文同序号高亮；示意对齐，非真实结果）
+  function bindSync() {
+    var ps = document.querySelectorAll('#cols p[data-idx]');
+    ps.forEach(function (p) {
+      p.style.cursor = 'pointer';
+      p.addEventListener('click', function () {
+        var idx = p.dataset.idx;
+        document.querySelectorAll('#cols p.hl-src, #cols p.hl-tgt').forEach(function (x) {
+          x.classList.remove('hl-src','hl-tgt');
+        });
+        document.querySelectorAll('#cols p[data-idx="'+idx+'"]').forEach(function (x) {
+          var col = x.closest('.rc');
+          x.classList.add(col && col.classList.contains('src') ? 'hl-src' : 'hl-tgt');
+        });
+        var total = document.querySelectorAll('#cols .rc.src p[data-idx]').length;
+        document.getElementById('r-prog').innerHTML = '第 <b>' + (parseInt(idx,10)+1) + '</b> / ' + total + ' 段';
+      });
+    });
+  }
+
+  function render() {
+    if (!V2.requireUser()) return;
+    var u = V2.read(V2.K.user, {});
+    document.getElementById('u-name').textContent = u.name;
+    document.getElementById('u-mail').textContent = u.mail;
+    document.getElementById('u-av').textContent = (u.name||'').charAt(0);
+
+    var id = new URLSearchParams(location.search).get('id');
+    var lib = V2.read(V2.K.library, []);
+    var b = lib.filter(function(x){ return x.id === id; })[0] || lib[0] || { name:'The Harbor Fog · 港口雾', src:'英语', tgt:'中文' };
+    document.getElementById('b-title').textContent = b.name;
+    document.getElementById('b-sub').textContent = b.src + ' → ' + b.tgt + ' · 示例占位译文';
+    document.title = b.name + ' · 双语阅读';
+
+    // 应用阅读偏好：手机默认上下对照，桌面默认并排（无显式偏好时按视口）
+    var pref = V3.getReaderPref();
+    var mobile = window.matchMedia('(max-width:560px)').matches;
+    var initialView = pref.view || (mobile ? 'stack' : 'split');
+    applyView(initialView);
+    applyFont(pref.font || 2);
+    bindSync();
+  }
+  render();
+</script>
+</body>
+</html>

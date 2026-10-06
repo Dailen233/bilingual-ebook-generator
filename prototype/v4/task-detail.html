@@ -52,7 +52,7 @@
   <div class="wrap-narrow">
 
     <div class="sim-bar" style="margin-bottom:22px">
-      <span>◆ 任务进度为<b>原型模拟</b>：按“保存状态 + 经过时间”推算，非真实后台服务。</span>
+      <span>◆ 任务进度为<b>原型模拟</b>：按"保存状态 + 经过时间"推算，非真实后台服务。</span>
     </div>
 
     <a class="link" href="dashboard.html" style="display:inline-flex;margin-bottom:14px">← 返回工作台</a>
@@ -64,9 +64,10 @@
           <div class="meta-row" style="margin-bottom:8px"><span class="badge b-run"><span class="dot" style="background:var(--ink-2)"></span>处理中</span></div>
           <h1 id="r-name">—</h1>
           <div class="meta-row"><span class="badge b-muted" id="r-lang">—</span></div>
+          <div class="meta-row" id="r-cfg" style="margin-top:6px"></div>
         </div>
       </div>
-      <p style="color:var(--muted);font-size:14px;margin:6px 0 18px">任务在后台运行，你可以离开页面；回来后仍可查看状态与结果（原型中“后台运行”为模拟效果）。</p>
+      <p style="color:var(--muted);font-size:14px;margin:6px 0 18px">任务在后台运行，你可以离开页面；回来后仍可查看状态与结果（原型中"后台运行"为模拟效果）。</p>
       <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-bottom:14px">
         <div class="ring gold" id="r-ring" style="--pct:0"><div class="ring-txt"><b>0%</b><span>处理中</span></div></div>
         <div style="flex:1;min-width:220px">
@@ -91,6 +92,7 @@
     <!-- 失败 -->
     <div class="card" id="fail-block" style="display:none">
       <h1>处理失败</h1>
+      <div class="meta-row" id="f-cfg" style="margin:10px 0 4px"></div>
       <div class="alert alert-err" id="fail-box" style="margin:14px 0"></div>
       <div style="font-size:14px;color:var(--muted);margin-bottom:20px" id="fail-suggest"></div>
       <div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
@@ -104,10 +106,12 @@
     <div class="card" id="done-block" style="display:none">
       <div class="alert alert-ok" style="margin-bottom:18px"><span class="ic">✓</span><span>双语电子书已生成（示例数据，译文为占位）。已写入个人书库。</span></div>
       <h1 id="d-name">—</h1>
-      <div class="meta-row" style="margin:10px 0 22px"><span class="badge b-muted" id="d-lang">—</span></div>
+      <div class="meta-row" style="margin:10px 0 8px"><span class="badge b-muted" id="d-lang">—</span></div>
+      <div class="meta-row" id="d-failflag" style="margin:0 0 8px"></div>
+      <div class="meta-row" id="d-cfg" style="margin:0 0 22px"></div>
       <div class="ornament">对照示意 · 示例数据</div>
-      <div class="cmp"><div><h4>原文</h4><div class="c-src">“The fog rolled in from the harbor at dusk.”</div></div><div><h4>译文</h4><div class="c-tgt">黄昏时分，雾从港口漫了进来。</div></div></div>
-      <div class="cmp"><div><h4>原文</h4><div class="c-src">“She locked the door and waited.” <span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span></div></div><div><h4>译文</h4><div class="c-tgt">—（该单元保留原文，示例）</div></div></div>
+      <div class="cmp"><div><h4>原文</h4><div class="c-src">"The fog rolled in from the harbor at dusk."</div></div><div><h4>译文</h4><div class="c-tgt">黄昏时分，雾从港口漫了进来。</div></div></div>
+      <div class="cmp"><div><h4>原文</h4><div class="c-src">"She locked the door and waited." <span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span></div></div><div><h4>译文</h4><div class="c-tgt">—（该单元保留原文，示例）</div></div></div>
       <div class="row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px">
         <a class="btn btn-primary" id="d-open" href="reader.html">打开双语阅读 →</a>
         <button class="btn btn-gold" onclick="fakeDl('epub')">下载 EPUB</button>
@@ -127,17 +131,22 @@
 <script src="app.js"></script>
 <script src="topbar.js"></script>
 <script>
+  var taskId = new URLSearchParams(location.search).get('id');
   var timer = null;
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function fakeDl(k){ alert('示例：下载双语电子书.'+k+'（原型不产生真实文件）'); }
-
-  function addLibraryIfNew(t) {
-    var lib = V2.read(V2.K.library, []);
-    if (lib.some(function(b){ return b.name === t.name && b.src === t.src && b.tgt === t.tgt; })) return;
-    lib.unshift({ id:'b'+Date.now(), name:t.name, src:t.src, tgt:t.tgt, time:new Date().toLocaleString('zh-CN'), status:'done' });
-    V2.write(V2.K.library, lib);
+  function renderConfig(t){
+    if (!t) return '';
+    var parts = [];
+    if (t.serviceName) parts.push('服务：'+esc(t.serviceName));
+    if (t.modelName) parts.push('模型：'+esc(t.modelName));
+    if (t.styleName) parts.push('风格：'+esc(t.styleName));
+    return parts.map(function(p){ return '<span class="badge b-muted">'+p+'</span>'; }).join('');
   }
+
+  function currentTask(){ return taskId ? V2.getTask(taskId) : V2.getTask(); }
+  function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
 
   function showBlock(id) {
     ['run-block','fail-block','done-block','empty-block'].forEach(function(x){
@@ -148,9 +157,12 @@
   function renderDone(t) {
     document.getElementById('d-name').textContent = t.name;
     document.getElementById('d-lang').textContent = t.src + ' → ' + t.tgt;
-    var lib = V2.read(V2.K.library, []);
-    var match = lib.filter(function(b){ return b.name===t.name && b.src===t.src && b.tgt===t.tgt; })[0];
-    document.getElementById('d-open').href = 'reader.html' + (match ? '?id='+match.id : '');
+    document.getElementById('d-failflag').innerHTML = (t.failedCount > 0)
+      ? '<span class="badge b-err"><span class="dot" style="background:var(--err)"></span>含失败单元 × '+t.failedCount+'</span>'
+      : '<span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>全部成功</span>';
+    document.getElementById('d-cfg').innerHTML = renderConfig(t);
+    var bookId = t.bookId || ('b_' + t.id);
+    document.getElementById('d-open').href = 'reader.html?id=' + encodeURIComponent(bookId);
     showBlock('done-block');
   }
 
@@ -178,33 +190,20 @@
     updatePhases(pct);
   }
 
+  // 确定性推进：进度由 startedAt 计算，多标签页/重复读取不累加
   function tick() {
-    var t = V2.getTask();
-    if (!t || t.state !== 'running') { if(timer){clearInterval(timer);timer=null;} return; }
-    t.cur += Math.floor(20 + Math.random()*40);
-    if (t.cur >= t.total) {
-      t.cur = t.total; t.state = 'done'; t.updatedAt = Date.now();
-      V2.setTask(t);
-      if(timer){clearInterval(timer);timer=null;}
-      addLibraryIfNew(t);
-      renderDone(t);
-      return;
-    }
-    t.updatedAt = Date.now(); V2.setTask(t);
-    paintRun(t);
+    V2.advanceTasks(Date.now());
+    var t = currentTask();
+    if (!t) { stopTimer(); render(null); return; }
+    if (t.state === 'running') { paintRun(t); return; }
+    stopTimer();
+    render(t);
   }
 
   function renderRun(t) {
     document.getElementById('r-name').textContent = t.name;
     document.getElementById('r-lang').textContent = t.src + ' → ' + t.tgt;
-    // 按“保存状态 + 经过时间”推算离开期间进度
-    var elapsed = Math.max(0, Date.now() - (t.updatedAt || Date.now()));
-    var jumped = Math.floor(elapsed / 700 * 30);
-    if (jumped > 0 && t.cur < t.total) {
-      t.cur = Math.min(t.total, t.cur + jumped);
-      if (t.cur >= t.total) { t.state='done'; t.updatedAt=Date.now(); V2.setTask(t); addLibraryIfNew(t); renderDone(t); return; }
-      t.updatedAt = Date.now(); V2.setTask(t);
-    }
+    document.getElementById('r-cfg').innerHTML = renderConfig(t);
     showBlock('run-block');
     paintRun(t);
     if (timer) clearInterval(timer);
@@ -213,18 +212,22 @@
 
   function renderFail(t) {
     document.getElementById('fail-box').innerHTML = '<span class="ic">✕</span><span>'+esc(t.failMsg || '翻译服务持续不可用（示例：模拟 API 超时且重试耗尽）。任务已停止，已完成的进度未保留为结果。')+'</span>';
+    document.getElementById('f-cfg').innerHTML = renderConfig(t);
     document.getElementById('fail-suggest').textContent = '可操作建议：稍后重新提交。注意：本原型不实现失败后自动断点续做（需求 P1 明确不承诺该能力）。';
     showBlock('fail-block');
   }
 
-  function simLeave() { if(timer){clearInterval(timer);timer=null;} location.href='dashboard.html'; }
+  function simLeave() { stopTimer(); location.href='dashboard.html'; }
   function simFail() {
-    if(timer){clearInterval(timer);timer=null;}
-    var t = V2.getTask();
-    t.state='failed'; t.updatedAt=Date.now(); V2.setTask(t);
-    renderFail(t);
+    stopTimer();
+    V2.updateTask(taskId, { state:'failed', updatedAt: Date.now() });
+    render(currentTask());
   }
-  function retry(){ V2.setTask({ state:'running', name:V2.getTask().name, src:V2.getTask().src, tgt:V2.getTask().tgt, cur:0, total:500, startedAt:Date.now(), updatedAt:Date.now() }); render(V2.getTask()); }
+  function retry() {
+    // 保留配置，从零开始；不影响其他任务
+    V2.updateTask(taskId, { state:'running', cur:0, total:500, failedCount:0, bookId:null, startedAt:Date.now(), updatedAt:Date.now() });
+    render(currentTask());
+  }
 
   function render(t) {
     if (!t) { showBlock('empty-block'); return; }
@@ -240,9 +243,10 @@
     document.getElementById('u-name').textContent = u.name;
     document.getElementById('u-mail').textContent = u.mail;
     document.getElementById('u-av').textContent = (u.name||'').charAt(0);
-    render(V2.getTask());
+    V2.advanceTasks(Date.now());
+    render(currentTask());
   }
-  window.addEventListener('beforeunload', function(){ if(timer){clearInterval(timer);timer=null;} });
+  window.addEventListener('beforeunload', stopTimer);
 </script>
 </body>
 </html>

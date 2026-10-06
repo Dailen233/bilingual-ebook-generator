@@ -9,10 +9,11 @@
     catch (e) { return fb; }
   }
 
-  // 退出（模拟）：dashboard.html 内已有同名函数，这里提供兜底
-  window.logout = window.logout || function () {
+  // 统一用户端退出入口：仅清除用户态（管理员态独立、职责清楚），跳登录页。
+  // 所有用户页共用此入口（工作台不再另定义 logout），避免行为不一致。
+  window.logout = function () {
     try { localStorage.removeItem('v2_user_v1'); } catch (e) {}
-    location.href = 'index.html';
+    location.replace('login.html');
   };
 
   function currentFile() {
@@ -20,14 +21,24 @@
     return p;
   }
 
-  // 同步路由守卫：在 DOMContentLoaded 之前执行，避免引导页闪屏。
-  // 已登录访问 index / login / register 时立即跳转到工作台（不先渲染页面）。
-  (function guardNow() {
-    var pages = ['index.html', 'login.html', 'register.html'];
-    if (pages.indexOf(currentFile()) !== -1 && read('v2_user_v1', null)) {
-      location.replace('dashboard.html');
+  // 引导页（已登录不可停留）与受保护用户页（未登录不可停留）
+  var GUEST_PAGES = ['index.html', 'login.html', 'register.html'];
+  var PROTECTED_PAGES = ['dashboard.html', 'new-task.html', 'task-detail.html', 'library.html', 'reader.html'];
+
+  // 路由守卫：已登录访问引导页 → 工作台；未登录停留在受保护页 → 登录页
+  function routeGuard() {
+    var here = currentFile();
+    var user = read('v2_user_v1', null);
+    if (user) {
+      if (GUEST_PAGES.indexOf(here) !== -1) { location.replace('dashboard.html'); return true; }
+    } else {
+      if (PROTECTED_PAGES.indexOf(here) !== -1) { location.replace('login.html'); return true; }
     }
-  })();
+    return false;
+  }
+
+  // 尽早执行（本脚本位于 body 末尾、先于页面内联脚本），避免闪屏
+  routeGuard();
 
   // 子页面归属：阅读页归「我的书库」，任务详情归「创建任务」
   var PARENT = { 'reader.html': 'library.html', 'task-detail.html': 'new-task.html' };
@@ -88,17 +99,6 @@
         if (guest) guest.hidden = false;
       }
     }
-  }
-
-  // 已登录访问 index / login / register 时，直接跳到工作台（不先展示这些引导页）
-  function redirectAuthed() {
-    var f = currentFile();
-    var guardPages = ['index.html', 'login.html', 'register.html'];
-    if (guardPages.indexOf(f) !== -1 && read('v2_user_v1', null)) {
-      location.replace('dashboard.html');
-      return true;
-    }
-    return false;
   }
 
   function setupAccount() {
@@ -174,12 +174,12 @@
 
   // 重同步：先做路由守卫，再刷新顶栏账号/游客态
   function resync() {
-    if (redirectAuthed()) return;
+    if (routeGuard()) return;
     syncAuth();
   }
 
   function init() {
-    if (redirectAuthed()) return;
+    if (routeGuard()) return;
     markCurrent();
     syncAuth();
     setupAccount();

@@ -1,0 +1,71 @@
+/* v4 管理概览页（仅 admin.html 使用）
+   延续管理端墨蓝/暖纸/金，突出「待处理 → 运行数据 → 操作日志」的主次。 */
+
+:root {
+  --paper: #f7f4ec;
+  --panel: #fffdf8;
+  --panel-2: #fbf7ee;
+  --ink: #16303f;
+  --ink-2: #2c4c63;
+  --ink-3: #35587a;
+  --gold: #a87c2e;
+  --gold-2: #c9a04a;
+  --muted: #5f6b70;
+  --faint: #8b959a;
+  --line: #dcd7ca;
+  --line-2: #c5bfb0;
+  --err: #9a3a2e;
+  --err-bg: #f6e4e0;
+  --warn-bg: #fbf3dc;
+  --serif: "Noto Serif CJK SC", "BP Serif SC", Georgia, serif;
+}
+
+/* 分区标签：左侧标题 + 右侧细线，区分主次 */
+.section-label {
+  display: flex; align-items: center; gap: 12px;
+  margin: 30px 0 14px;
+  font-family: var(--serif); font-size: 15px; font-weight: 700;
+  color: var(--ink); letter-spacing: .02em;
+}
+.section-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* 待处理卡片：左侧色条 + 图标 + 标题/说明 + 大数字 + 入口 */
+.task-card {
+  position: relative; display: flex; align-items: center; gap: 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 20px 22px; text-decoration: none; overflow: hidden;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.task-card:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(16,34,46,.10); border-color: var(--line-2); }
+.task-card::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px; border-radius: 0 3px 3px 0; }
+.task-card.tc-warn::before { background: var(--gold-2); }
+.task-card.tc-err::before { background: var(--err); }
+.task-card .tc-icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 21px; flex-shrink: 0; }
+.task-card.tc-warn .tc-icon { background: var(--warn-bg); }
+.task-card.tc-err .tc-icon { background: var(--err-bg); }
+.task-card .tc-body { flex: 1; min-width: 0; }
+.task-card .tc-title { font-family: var(--serif); font-weight: 700; font-size: 16px; color: var(--ink); }
+.task-card .tc-desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.task-card .tc-num { font-family: var(--serif); font-weight: 700; font-size: 2.2rem; line-height: 1; flex-shrink: 0; }
+.task-card.tc-warn .tc-num { color: var(--gold); }
+.task-card.tc-err .tc-num { color: var(--err); }
+.task-card .tc-cta { font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap; flex-shrink: 0; }
+
+/* 运行数据：紧凑横条（辅助信息，弱化） */
+.stat-strip {
+  display: flex; align-items: stretch;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 16px 6px;
+}
+.stat-strip .ss-item { flex: 1; text-align: center; padding: 2px 8px; }
+.stat-strip .ss-k { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.stat-strip .ss-v { display: block; font-family: var(--serif); font-weight: 700; font-size: 1.65rem; color: var(--ink); margin-top: 3px; line-height: 1.1; }
+.stat-strip .ss-v small { font-size: 13px; color: var(--faint); font-weight: 400; }
+.stat-strip .ss-div { width: 1px; background: var(--line); margin: 6px 0; }
+
+/* 手机：卡片纵向，待处理数字与入口换行 */
+@media (max-width: 900px) {
+  .task-card { flex-wrap: wrap; }
+  .task-card .tc-num { order: -1; width: 100%; text-align: right; margin-bottom: -8px; }
+  .task-card .tc-cta { width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+}
