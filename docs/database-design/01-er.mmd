@@ -16,6 +16,7 @@ erDiagram
     REPORT ||--o{ DISPOSITION : "处置"
     USER ||--o{ DISPOSITION : "操作"
     USER ||--o{ AUDIT_LOG : "操作留痕"
+    REPORT o|--o{ AUDIT_LOG : "审核上下文(可空)"
     USER ||--o{ BOOKMARK : "添加书签"
     BOOK ||--o{ BOOKMARK : "书签于"
     PARAGRAPH ||--o{ BOOKMARK : "定位到"
@@ -110,6 +111,7 @@ erDiagram
         varchar128 svc_name "可空"
         varchar128 model_name "可空"
         varchar128 style_name "可空"
+        varchar16 status "active/blocked/removed, 计划扩展"
         int failed_units
         datetime6 created_at
     }
@@ -142,6 +144,7 @@ erDiagram
     AUDIT_LOG {
         varchar36 id PK
         varchar36 actor_id FK
+        varchar36 report_id FK "可空, 审核上下文"
         varchar64 action "view_private_file 等"
         varchar32 target_type "多态, 不设FK"
         varchar36 target_id

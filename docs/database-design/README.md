@@ -29,7 +29,7 @@
 
 - **已实现**：以 yiban-api `models/user.py`、`models/user_session.py`、`alembic/versions/0001`、`0002` 为准，本设计与其逐列一致；`user.status/disabled_reason/disabled_at` 为后续里程碑新增列，**不标为已实现**。
 - **本次拟定**：依据已确认需求（FR-01~16、G11、NFR-03）与 v4 原型流程形成；落库前需经评审与迁移批次。
-- **计划扩展**：`report`/`disposition`/`audit_log`（M2 管理端）、`bookmark`/`reading_progress`（M4 阅读体验）、`user.status/disabled_*`（M2）——均为后续里程碑目标设计；承载方式见 02-字段字典（事件记录 / 关联实体），**资源用量由聚合查询承载、不单独建表**（待确认展示口径）。
+- **计划扩展**：`report`/`disposition`/`audit_log`（M2 管理端）、`bookmark`/`reading_progress`（M4 阅读体验）、`user.status/disabled_*` 与 `book.status`（M2）——均为后续里程碑目标设计；承载方式见 02-字段字典（事件记录 / 关联实体），**资源用量由聚合查询承载、不单独建表**（待确认展示口径）。
 
 ## 与既有文档的关系（相互引用）
 
@@ -42,7 +42,7 @@
 
 ## 与既有草案的差异与推荐修订（记录，不擅自改已确认需求）
 
-> 以下差异来自「逻辑草案 → 物理目标模型」的落地，以及「真实后端已实现 / 上传方案已评审」的对照；均已标注依据，**不悄悄改动需求文档**。
+> 以下差异来自「逻辑草案 → 物理目标模型」的落地，以及「真实后端已实现 / 上传方案待评审」的对照；均已标注依据，**不悄悄改动需求文档**。
 
 | # | 差异点 | 既有表述 | 目标模型 | 依据 / 推荐 |
 |---|---|---|---|---|
@@ -60,15 +60,19 @@
 - 属主一致：`task.owner_id == upload_file.owner_id`、`book.owner_id == task.owner_id`（服务端强制，非 FK 自动保证）。
 - 幂等入库：`book.task_id` 唯一；`translation_unit(paragraph_id,seq_no)` 唯一；`book_file(book_id,format)` 唯一（防重复行，不解决物理文件一致性）。
 - 重试：`task.retry_of_task_id` 唯一 → 一个 failed task 最多一个直接子任务；重试=新建 task。
-- 计数：`0 ≤ failed_units ≤ done_units ≤ total_units`；单元级失败保留原文、不使任务 failed。
+- 计数：`0 ≤ failed_units ≤ done_units ≤ total_units`（`total_units/done_units/failed_units` 均 ≥0，已落 CHECK）；`book.failed_units ≥ 0`；`size_bytes ≥ 0`；单元级失败保留原文、不使任务 failed。
 - 完成顺序：成果文件就绪后同一事务内 `book → book_file → task.status=done`，不先标 done 再补记录。
-- 删除规则：外键默认 `RESTRICT`；用户用 `status=disabled` 停用；留痕/举报/处置 append-only。
+- 删除规则：外键默认 `RESTRICT`；用户 `status=disabled` 停用、书籍 `status=blocked/removed` 逻辑移除（不物理删除）；`disposition`/`audit_log` append-only，`report` 为可受控状态更新的状态实体。
+- 举报对象：`report` 用户或书籍二选一（`chk_report_target` 恰一非空）。
+- 处置落点：`disposition.action` block/delete 同事务落到 `user.status='disabled'` 或 `book.status='blocked/removed'`；approve/reject 仅推进 `report.status`。
+- 审核留痕：`audit_log.report_id` 结构化关联举报（成功查看私有内容可追溯具体审核事项）；无上下文拒绝日志为空。
+- 书签/阅读位置服务端一致性（外键不足以保证）：用户有权访问该书且段落经 chapter/task 确属该书。
 
 ## 待决 / 待技术设计
 
 1. 上传方案仍在 yiban-api 分支评审（`tasks/upload-foundation-plan.md`，4e3c762）；`storage_ref/sha256/ext` 已对齐，其余随定稿微调（如 20 MiB 上限、是否加 `PAYLOAD_TOO_LARGE` 响应码）。
 2. `stage`/`fail_reason` 是否首版持久化（状态机草案 §8）。
-3. `report`/`disposition`/`audit_log`（M2）与 `bookmark`/`reading_progress`（M4）在各自里程碑内的落地批次与「审核事项是否独立成表」「书签锚点粒度」等细化口径【待确认】。
+3. `report`/`disposition`/`audit_log`（M2）与 `bookmark`/`reading_progress`（M4）在各自里程碑内的落地批次【待确认】；审核事项已定「不单独建表（report 队列态视图）」、书签锚点已定「段落级」，如需整章书签再评估。
 4. 资源用量展示口径（实时聚合 vs 缓存汇总表）【待确认】。
 5. 物理文件与 `book_file` 记录的一致性（孤儿文件清理）——属文件存储设计，数据库唯一约束不解决。
 6. 后续在独立设计验证库核验方法（见发布说明），不对开发库/测试库执行本 SQL。

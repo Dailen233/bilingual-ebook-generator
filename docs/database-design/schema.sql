@@ -123,12 +123,13 @@ CREATE TABLE `task` (
     PRIMARY KEY (`id`),
     KEY `ix_task_owner_id` (`owner_id`),
     KEY `ix_task_file_id` (`file_id`),
+    KEY `ix_task_status` (`status`),
     UNIQUE KEY `uk_task_retry_of` (`retry_of_task_id`),
     UNIQUE KEY `uk_task_completion_key` (`completion_key`),
     CONSTRAINT `fk_task_user`   FOREIGN KEY (`owner_id`) REFERENCES `user` (`id`),
     CONSTRAINT `fk_task_file`   FOREIGN KEY (`file_id`) REFERENCES `upload_file` (`id`),
     CONSTRAINT `fk_task_retry`  FOREIGN KEY (`retry_of_task_id`) REFERENCES `task` (`id`),
-    CONSTRAINT `chk_task_counters` CHECK (`failed_units` <= `done_units` AND `done_units` <= `total_units`)
+    CONSTRAINT `chk_task_counters` CHECK (`total_units` >= 0 AND `done_units` >= 0 AND `failed_units` >= 0 AND `failed_units` <= `done_units` AND `done_units` <= `total_units`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='翻译任务（含配置快照与进度计数）';
 
 -- ---------------------------------------------------------------------------
@@ -199,14 +200,16 @@ CREATE TABLE `book` (
     `svc_name`     VARCHAR(128) NULL COMMENT '翻译服务名称快照（持久化展示快照）',
     `model_name`   VARCHAR(128) NULL COMMENT '模型名称快照（持久化展示快照）',
     `style_name`   VARCHAR(128) NULL COMMENT '风格名称快照（持久化展示快照）',
+    `status`       VARCHAR(16)  NOT NULL DEFAULT 'active' COMMENT '书籍状态：active/blocked/removed（屏蔽/逻辑移除；M2 计划扩展列，审核处置落点）',
     `failed_units` INT          NOT NULL DEFAULT 0 COMMENT '失败单元数快照（结果页展示）',
     `created_at`   DATETIME(6)  NOT NULL COMMENT '成书时间（UTC）',
     PRIMARY KEY (`id`),
     KEY `ix_book_owner_id` (`owner_id`),
     UNIQUE KEY `uk_book_task_id` (`task_id`),
     CONSTRAINT `fk_book_user` FOREIGN KEY (`owner_id`) REFERENCES `user` (`id`),
-    CONSTRAINT `fk_book_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='书籍成果（任务完成幂等入库）';
+    CONSTRAINT `fk_book_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`),
+    CONSTRAINT `chk_book_failed_units` CHECK (`failed_units` >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='书籍成果（任务完成幂等入库；status 为审核处置落点）';
 
 -- ---------------------------------------------------------------------------
 -- 9. book_file 成果文件记录 [本次拟定]
@@ -222,7 +225,8 @@ CREATE TABLE `book_file` (
     `generated_at` DATETIME(6)  NOT NULL COMMENT '生成时间（UTC）',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_book_file_book_format` (`book_id`, `format`),
-    CONSTRAINT `fk_book_file_book` FOREIGN KEY (`book_id`) REFERENCES `book` (`id`)
+    CONSTRAINT `fk_book_file_book` FOREIGN KEY (`book_id`) REFERENCES `book` (`id`),
+    CONSTRAINT `chk_book_file_size` CHECK (`size_bytes` IS NULL OR `size_bytes` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='书籍成果文件记录（EPUB/PDF）';
 
 -- ============================================================================
@@ -233,9 +237,11 @@ CREATE TABLE `book_file` (
 -- ---------------------------------------------------------------------------
 -- 10. report 举报/审核事项 [计划扩展 M2]
 -- 来源：FR-15（举报/审核队列）、G11（人工审核为主）、S8/E-AD1~E-AD3。
--- 承载方式：事件记录。「审核事项」= report 处于 pending/under_review 的行（审核
---           队列为按 status 过滤的视图），不单独建表，避免凑表。
--- 删除规则：举报及其处置默认保留（可追溯）；不物理删除，状态置 resolved/dismissed。
+-- 承载方式：状态实体（可受控状态更新 pending→under_review→resolved/dismissed，
+--           与 disposition/audit_log 的 append-only 语义不同）。「审核事项」= report
+--           处于 pending/under_review 的行（审核队列为按 status 过滤的视图），不单独建表。
+-- 举报对象：用户或书籍二选一（reported_user_id、book_id 恰一非空，CHECK 拒绝无对象/歧义对象）。
+-- 删除规则：不物理删除，状态置 resolved/dismissed（举报与处置默认保留，可追溯）。
 -- ---------------------------------------------------------------------------
 CREATE TABLE `report` (
     `id`               VARCHAR(36)  NOT NULL COMMENT '举报唯一标识（UUID）',
@@ -252,13 +258,18 @@ CREATE TABLE `report` (
     KEY `ix_report_book` (`book_id`),
     CONSTRAINT `fk_report_reporter` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`),
     CONSTRAINT `fk_report_reported_user` FOREIGN KEY (`reported_user_id`) REFERENCES `user` (`id`),
-    CONSTRAINT `fk_report_book` FOREIGN KEY (`book_id`) REFERENCES `book` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='举报/审核事项（审核队列为 status 过滤视图）';
+    CONSTRAINT `fk_report_book` FOREIGN KEY (`book_id`) REFERENCES `book` (`id`),
+    CONSTRAINT `chk_report_target` CHECK ((`reported_user_id` IS NOT NULL AND `book_id` IS NULL) OR (`reported_user_id` IS NULL AND `book_id` IS NOT NULL))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='举报/审核事项（用户或书籍二选一；审核队列为 status 过滤视图）';
 
 -- ---------------------------------------------------------------------------
 -- 11. disposition 处置记录 [计划扩展 M2]
 -- 来源：FR-15（处理记录：谁、何时、做了什么）、G11（处置可追溯）。
--- 承载方式：事件记录（append-only）。一次审核可产生一条处置（或多次补充处置）。
+-- 承载方式：事件记录（append-only，不可改）。一次审核可产生一条处置（或多次补充处置）。
+-- 处置落点（服务端在写 disposition 的同一事务内应用，非仅追加记录即宣称处置生效）：
+--   action=block/delete 且举报对象=用户 → user.status='disabled'（用户停用）；
+--   action=block/delete 且举报对象=书籍 → book.status='blocked'/'removed'（逻辑移除，不物理删除，与 RESTRICT 一致）；
+--   action=approve/reject → 仅推进 report.status=resolved/dismissed，不动目标。
 -- ---------------------------------------------------------------------------
 CREATE TABLE `disposition` (
     `id`         VARCHAR(36)  NOT NULL COMMENT '处置记录唯一标识（UUID）',
@@ -279,20 +290,25 @@ CREATE TABLE `disposition` (
 -- 来源：FR-15（管理员查看私有文件须留痕）、NFR-03、E-AD3（无上下文访问拒绝并记录）。
 -- 承载方式：事件记录（append-only）。target 为多态引用（target_type + target_id），
 --           不设外键——留痕对象可能已被删除，且留痕不应阻断对象生命周期。
+-- 审核上下文：report_id 结构化关联举报（成功查看私有内容须能追溯具体审核事项）；
+--           无审核上下文而被拒绝的访问，其 report_id 为空（仅记录 access_denied）。
 -- ---------------------------------------------------------------------------
 CREATE TABLE `audit_log` (
     `id`          VARCHAR(36)  NOT NULL COMMENT '留痕唯一标识（UUID）',
     `actor_id`    VARCHAR(36)  NOT NULL COMMENT '操作者（FK → user.id，管理员）',
+    `report_id`   VARCHAR(36)  NULL COMMENT '审核上下文（FK → report.id，结构化关联；无审核上下文的拒绝日志为空）',
     `action`      VARCHAR(64)  NOT NULL COMMENT '动作（如 view_private_file / access_denied）',
     `target_type` VARCHAR(32)  NOT NULL COMMENT '目标类型（upload_file/book/report 等，多态，不设 FK）',
     `target_id`   VARCHAR(36)  NOT NULL COMMENT '目标标识',
-    `detail`      VARCHAR(512) NULL COMMENT '附加说明（如审核上下文 report_id）',
+    `detail`      VARCHAR(512) NULL COMMENT '附加说明（不承载结构化关联，结构化关联见 report_id）',
     `created_at`  DATETIME(6)  NOT NULL COMMENT '发生时间（UTC）',
     PRIMARY KEY (`id`),
     KEY `ix_audit_log_actor` (`actor_id`),
+    KEY `ix_audit_log_report` (`report_id`),
     KEY `ix_audit_log_target` (`target_type`, `target_id`),
-    CONSTRAINT `fk_audit_log_actor` FOREIGN KEY (`actor_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='管理操作留痕（含管理员查看私有内容；append-only，target 多态不设 FK）';
+    CONSTRAINT `fk_audit_log_actor` FOREIGN KEY (`actor_id`) REFERENCES `user` (`id`),
+    CONSTRAINT `fk_audit_log_report` FOREIGN KEY (`report_id`) REFERENCES `report` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='管理操作留痕（含管理员查看私有内容；append-only，target 多态不设 FK，report_id 结构化关联）';
 
 -- ---------------------------------------------------------------------------
 -- 13. bookmark 书签 [计划扩展 M4]
