@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -49,6 +50,32 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def _git_short_sha() -> str:
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                             capture_output=True, text=True, check=True)
+        return out.stdout.strip()
+    except Exception:
+        return datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+def export_tar(base: Path, dest_dir: Path, commit_short: str) -> Path:
+    """把已校验的发布目录打成 tar.gz（文件按序、mtime/属主归零以求可复现），返回包路径。"""
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    tarpath = dest_dir / f"bilingual-ebook-generator-{commit_short}.tar.gz"
+    with tarfile.open(tarpath, "w:gz") as tar:
+        for p in sorted(base.rglob("*")):
+            if not p.is_file():
+                continue
+            info = tar.gettarinfo(str(p), arcname=p.relative_to(base).as_posix())
+            info.mtime = 0
+            info.uid = info.gid = 0
+            info.uname = info.gname = ""
+            with open(p, "rb") as f:
+                tar.addfile(info, f)
+    return tarpath
 
 
 def check_links(base: Path):
@@ -94,6 +121,12 @@ def main() -> int:
             return 1
         print("[RESULT] 相对链接/资源存在性核对通过")
         return 0
+
+    tar_dir = None
+    if "--tar" in args:
+        i = args.index("--tar")
+        if i + 1 < len(args):
+            tar_dir = Path(args[i + 1])
 
     out = Path(args[0]) if args else (
         Path("/tmp") / f"yiban-release-{datetime.datetime.now():%Y%m%d-%H%M%S}")
@@ -153,6 +186,10 @@ def main() -> int:
 
     total = sum(p.stat().st_size for p in manifest)
     print(f"[INFO] 发布包 {out}：{len(manifest)} 文件，{total} 字节")
+    if tar_dir:
+        tarpath = export_tar(out, tar_dir, _git_short_sha())
+        print(f"[INFO] tar.gz 导出：{tarpath}")
+        print(f"[INFO] tar.gz SHA-256：{_sha256(tarpath)}")
     return 0
 
 
