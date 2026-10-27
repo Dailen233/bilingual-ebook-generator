@@ -87,6 +87,8 @@
   <h3>关键字段概览</h3>
   <img class="er" src="docs/database-design/er-overview.svg" alt="数据库 ER 概览图">
   <p class="note"><a href="docs/database-design/er.svg">查看全字段图（er.svg）</a> · 可编辑源 <a href="docs/database-design/01-er.mmd">01-er.mmd</a> · 图文说明 <a href="docs/database-design/01-er.md">01-er.md</a></p>
+  <h3>模块图（跨模块连线更清晰）</h3>
+  <p class="note">按 <a href="docs/database-design/er-module-accounts.svg">账号与会话</a> · <a href="docs/database-design/er-module-generation.svg">生成与成果</a> · <a href="docs/database-design/er-module-moderation.svg">举报审核与管理留痕</a> · <a href="docs/database-design/er-module-reading.svg">书签与阅读位置</a> 拆分；虚线为跨模块外部引用（EXTERNAL），完整关系见全字段图。</p>
 </section>
 
 <section>
@@ -118,7 +120,7 @@
     <li>逻辑模型：<a href="数据库逻辑模型草案.md">数据库逻辑模型草案.md</a></li>
     <li>数据库直读：<a href="docs/database-design/数据库设计说明.html">数据库说明</a> · <a href="docs/database-design/字段字典.html">字段字典</a> · <a href="docs/database-design/页面数据对应表.html">页面数据对应表</a></li>
     <li>设计 SQL：<a href="docs/database-design/schema.sql">docs/database-design/schema.sql</a> · ER 源 <a href="docs/database-design/01-er.mmd">01-er.mmd</a></li>
-    <li>ER 图：<a href="docs/database-design/er.svg">er.svg</a> · <a href="docs/database-design/er-overview.svg">er-overview.svg</a></li>
+    <li>ER 图：<a href="docs/database-design/er.svg">er.svg</a> · <a href="docs/database-design/er-overview.svg">er-overview.svg</a> · 模块图（accounts/generation/moderation/reading）</li>
     <li>MySQL 验收：<a href="docs/database-design/04-设计验证记录.md">04-设计验证记录.md</a>（8.4.13 实测通过）</li>
     <li>发布与回退：<a href="docs/发布说明.md">发布说明.md</a> · 检查入口 <a href="docs/课程检查入口.md">课程检查入口.md</a></li>
     <li>完整文件清单与校验见 <a href="docs/发布说明.md">发布说明</a> §发布白名单。</li>

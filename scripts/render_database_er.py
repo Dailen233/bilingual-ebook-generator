@@ -239,17 +239,143 @@ def render(tables: list[Table], foreign: list[ForeignKey], source_hash: str, rev
     return svg
 
 
+MODULES = {
+    "accounts": ("账号与会话", {"user", "user_session"}),
+    "generation": ("生成与成果", {"upload_file", "task", "chapter", "paragraph", "translation_unit", "book", "book_file"}),
+    "moderation": ("举报审核与管理留痕", {"report", "disposition", "audit_log"}),
+    "reading": ("书签与阅读位置", {"bookmark", "reading_progress"}),
+}
+
+
+def render_module(tables, foreign, focus, title, source_hash, revision) -> str:
+    """渲染单一模块图：模块内表全字段 + 内部边实线；跨模块外部父表画成紧凑 EXTERNAL 卡 + 虚线边；外部子表关系以文字说明，不丢失关系。"""
+    by_table = {t.name: t for t in tables}
+    focus_tables = [t for t in tables if t.name in focus]
+    parent_names = sorted({f.parent for f in foreign if f.child in focus and f.parent not in focus})
+    child_names = sorted({f.child for f in foreign if f.parent in focus and f.child not in focus})
+    internal = [f for f in foreign if f.child in focus and f.parent in focus and f.parent != f.child]
+    external = [f for f in foreign if f.child in focus and f.parent in parent_names]
+
+    deps = {t.name: {f.parent for f in internal if f.child == t.name} for t in focus_tables}
+    levels: dict[str, int] = {}
+    while len(levels) < len(focus_tables):
+        eligible = [t.name for t in focus_tables if t.name not in levels and deps[t.name] <= set(levels)]
+        if not eligible:
+            raise ValueError(f"Module {title} has non-self FK cycle")
+        for n in eligible:
+            levels[n] = max((levels[p] + 1 for p in deps[n]), default=0)
+    columns: list[list[Table]] = [[] for _ in range(max(levels.values()) + 1)]
+    for t in focus_tables:
+        columns[levels[t.name]].append(t)
+
+    width, gap, margin, row_h, header_h = 500, 60, 170, 26, 86
+    positions: dict[str, tuple] = {}
+    y0 = 190
+    focus_bottom = y0
+    for ci, col in enumerate(columns):
+        x = margin + ci * (width + gap)
+        y = y0
+        for t in col:
+            h = header_h + row_h * len(t.columns) + 16
+            positions[t.name] = (x, y, width, h)
+            y += h + 80
+        focus_bottom = max(focus_bottom, y)
+
+    ext_width, ext_h, ext_gap = 240, 64, 40
+    ext_y = focus_bottom + 60
+    ext_positions: dict[str, tuple] = {}
+    for i, pn in enumerate(parent_names):
+        ext_positions[pn] = (margin + i * (ext_width + ext_gap), ext_y, ext_width, ext_h)
+
+    total_width = max(2 * margin + len(columns) * width + (len(columns) - 1) * gap,
+                      margin + len(parent_names) * (ext_width + ext_gap) - ext_gap + margin)
+    total_height = ext_y + (ext_h + 40 if parent_names else 20) + 100
+
+    esc = html.escape
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{total_height}" viewBox="0 0 {total_width} {total_height}">',
+        f'<title>{esc(title)}</title>',
+        f'<desc>Module diagram ({len(focus_tables)} tables). Derived from schema.sql, source {esc(revision)}. Draft, not execution evidence.</desc>',
+        '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6b8989"/></marker><marker id="arrowExt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#b58900"/></marker></defs>',
+        '<style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#1c3544}.mono{font-family:DejaVu Sans Mono,monospace}.edge{fill:none;stroke:#6b8989;stroke-width:2;marker-end:url(#arrow)}.ext{fill:none;stroke:#b58900;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrowExt)}.edge-label{font-size:13px;paint-order:stroke;stroke:#f7f5ed;stroke-width:6;stroke-linejoin:round}.muted{fill:#5f7078}.key{fill:#9c731f;font-weight:bold}</style>',
+        f'<rect width="{total_width}" height="{total_height}" fill="#f7f5ed"/>',
+        f'<text x="{margin}" y="60" font-size="18" letter-spacing="3" fill="#9c731f">YIBAN / MODULE</text>',
+        f'<text x="{margin}" y="105" font-size="30" font-weight="bold">{esc(title)}</text>',
+        f'<text x="{margin}" y="140" font-size="15" class="muted">模块图 | {len(focus_tables)} 张表 | source {esc(revision)} | 虚线=跨模块外部引用（EXTERNAL）</text>']
+
+    for fk in internal:
+        px, py, pw, ph = positions[fk.parent]
+        cx, cy, cw, ch = positions[fk.child]
+        sx, sy = px + pw, py + ph / 2
+        ex, ey = cx, cy + ch / 2
+        out.append(f'<path class="edge" d="M {sx} {sy} L {ex} {ey}"/>')
+        out.append(f'<text class="edge-label" text-anchor="middle" x="{(sx+ex)/2}" y="{sy-8}">{esc(", ".join(fk.columns))}</text>')
+    for fk in external:
+        cx, cy, cw, ch = positions[fk.child]
+        ex, ey, ew, eh = ext_positions[fk.parent]
+        sx, sy = cx + cw / 2, cy + ch
+        out.append(f'<path class="ext" d="M {sx} {sy} L {ex+ew/2} {ey}"/>')
+        out.append(f'<text class="edge-label" text-anchor="middle" x="{sx}" y="{sy+16}">{esc(", ".join(fk.columns))}</text>')
+
+    def draw_card(name, x, y, w, h, cols, external=False):
+        implemented = name in ("user", "user_session")
+        header = "#e8e2d4" if external else ("#e5eeea" if implemented else "#e5edf1")
+        accent = "#8a6d1f" if external else ("#357362" if implemented else "#41657c")
+        tag = "EXTERNAL" if external else ("IMPLEMENTED" if implemented else "PROPOSED")
+        block = [f'<g id="table-{esc(name)}">', f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>',
+            f'<path d="M{x+10} {y}H{x+w-10}Q{x+w} {y} {x+w} {y+10}V{y+50}H{x}V{y+10}Q{x} {y} {x+10} {y}Z" fill="{header}"/>',
+            f'<text class="mono" x="{x+16}" y="{y+31}" font-size="22" font-weight="bold">{esc(name)}</text>',
+            f'<text x="{x+w-16}" y="{y+30}" text-anchor="end" font-size="12" fill="{accent}">{tag}</text>',
+            f'<text x="{x+16}" y="{y+75}" font-size="13" class="muted">KEY</text>',
+            f'<text x="{x+114}" y="{y+75}" font-size="13" class="muted">COLUMN</text>',
+            f'<text x="{x+350}" y="{y+75}" font-size="13" class="muted">TYPE / NULL</text>']
+        for row, col in enumerate(cols):
+            ry = y + header_h + row * row_h
+            if row % 2 == 0:
+                block.append(f'<rect x="{x+1}" y="{ry-2}" width="{w-2}" height="{row_h}" fill="#f2f4ef"/>')
+            kinds = "/".join(k for k in ("PK", "FK", "UK", "U*", "IX") if k in col.keys)
+            block += [f'<text x="{x+16}" y="{ry+18}" font-size="12" class="key">{esc(kinds)}</text>',
+                f'<text x="{x+114}" y="{ry+18}" font-size="15" class="mono">{esc(col.name)}</text>',
+                f'<text x="{x+350}" y="{ry+18}" font-size="13" class="mono muted">{esc(col.kind.replace(" UNSIGNED", " U") + (" ?" if col.nullable else ""))}</text>']
+        block.append('</g>')
+        out.extend(block)
+
+    for t in focus_tables:
+        x, y, w, h = positions[t.name]
+        draw_card(t.name, x, y, w, h, t.columns)
+    for pn in parent_names:
+        x, y, w, h = ext_positions[pn]
+        out += [f'<g id="ext-{esc(pn)}">', f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>',
+            f'<path d="M{x+10} {y}H{x+w-10}Q{x+w} {y} {x+w} {y+10}V{y+40}H{x}V{y+10}Q{x} {y} {x+10} {y}Z" fill="#e8e2d4"/>',
+            f'<text class="mono" x="{x+16}" y="{y+26}" font-size="17" font-weight="bold">{esc(pn)}</text>',
+            f'<text x="{x+w-14}" y="{y+25}" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>',
+            f'<text x="{x+16}" y="{y+54}" font-size="12" class="muted">id (PK) · 仅引用</text>', '</g>']
+
+    if child_names:
+        out.append(f'<text x="{margin}" y="{total_height-70}" font-size="14" class="muted">本模块表被外部表引用：{esc(", ".join(child_names))}（见完整图 / 对应模块图）</text>')
+    out.append(f'<text x="{margin}" y="{total_height-40}" font-size="12" class="mono muted">Source SHA-256: {source_hash}</text>')
+    out.append('</svg>')
+    svg = "\n".join(out)
+    ET.fromstring(svg)
+    return svg
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("sql", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--revision", default="working-tree")
     parser.add_argument("--overview", action="store_true")
+    parser.add_argument("--module", choices=list(MODULES), default=None, help="渲染单一模块图")
     args = parser.parse_args()
     try:
         data = args.sql.read_bytes()
         tables, foreign = parse(data.decode("utf-8"))
-        svg = render(tables, foreign, hashlib.sha256(data).hexdigest(), args.revision, args.overview)
+        source_hash = hashlib.sha256(data).hexdigest()
+        if args.module:
+            title, focus = MODULES[args.module]
+            svg = render_module(tables, foreign, focus, title, source_hash, args.revision)
+        else:
+            svg = render(tables, foreign, source_hash, args.revision, args.overview)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(svg, encoding="utf-8")
     except (OSError, ValueError, KeyError) as exc:

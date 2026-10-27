@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="812" viewBox="0 0 1400 812">
+<title>账号与会话</title>
+<desc>Module diagram (2 tables). Derived from schema.sql, source working-tree. Draft, not execution evidence.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6b8989"/></marker><marker id="arrowExt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#b58900"/></marker></defs>
+<style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#1c3544}.mono{font-family:DejaVu Sans Mono,monospace}.edge{fill:none;stroke:#6b8989;stroke-width:2;marker-end:url(#arrow)}.ext{fill:none;stroke:#b58900;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrowExt)}.edge-label{font-size:13px;paint-order:stroke;stroke:#f7f5ed;stroke-width:6;stroke-linejoin:round}.muted{fill:#5f7078}.key{fill:#9c731f;font-weight:bold}</style>
+<rect width="1400" height="812" fill="#f7f5ed"/>
+<text x="170" y="60" font-size="18" letter-spacing="3" fill="#9c731f">YIBAN / MODULE</text>
+<text x="170" y="105" font-size="30" font-weight="bold">账号与会话</text>
+<text x="170" y="140" font-size="15" class="muted">模块图 | 2 张表 | source working-tree | 虚线=跨模块外部引用（EXTERNAL）</text>
+<path class="edge" d="M 670 371.0 L 730 332.0"/>
+<text class="edge-label" text-anchor="middle" x="700.0" y="363.0">user_id</text>
+<g id="table-user">
+<rect x="170" y="190" width="500" height="362" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
+<path d="M180 190H660Q670 190 670 200V240H170V200Q170 190 180 190Z" fill="#e5eeea"/>
+<text class="mono" x="186" y="221" font-size="22" font-weight="bold">user</text>
+<text x="654" y="220" text-anchor="end" font-size="12" fill="#357362">IMPLEMENTED</text>
+<text x="186" y="265" font-size="13" class="muted">KEY</text>
+<text x="284" y="265" font-size="13" class="muted">COLUMN</text>
+<text x="520" y="265" font-size="13" class="muted">TYPE / NULL</text>
+<rect x="171" y="274" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="294" font-size="12" class="key">PK</text>
+<text x="284" y="294" font-size="15" class="mono">id</text>
+<text x="520" y="294" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="186" y="320" font-size="12" class="key">UK</text>
+<text x="284" y="320" font-size="15" class="mono">email</text>
+<text x="520" y="320" font-size="13" class="mono muted">VARCHAR(255)</text>
+<rect x="171" y="326" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="346" font-size="12" class="key"></text>
+<text x="284" y="346" font-size="15" class="mono">password_hash</text>
+<text x="520" y="346" font-size="13" class="mono muted">VARCHAR(255)</text>
+<text x="186" y="372" font-size="12" class="key"></text>
+<text x="284" y="372" font-size="15" class="mono">display_name</text>
+<text x="520" y="372" font-size="13" class="mono muted">VARCHAR(100)</text>
+<rect x="171" y="378" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="398" font-size="12" class="key"></text>
+<text x="284" y="398" font-size="15" class="mono">role</text>
+<text x="520" y="398" font-size="13" class="mono muted">VARCHAR(16)</text>
+<text x="186" y="424" font-size="12" class="key"></text>
+<text x="284" y="424" font-size="15" class="mono">status</text>
+<text x="520" y="424" font-size="13" class="mono muted">VARCHAR(16)</text>
+<rect x="171" y="430" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="450" font-size="12" class="key"></text>
+<text x="284" y="450" font-size="15" class="mono">disabled_reason</text>
+<text x="520" y="450" font-size="13" class="mono muted">VARCHAR(255) ?</text>
+<text x="186" y="476" font-size="12" class="key"></text>
+<text x="284" y="476" font-size="15" class="mono">disabled_at</text>
+<text x="520" y="476" font-size="13" class="mono muted">DATETIME(6) ?</text>
+<rect x="171" y="482" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="502" font-size="12" class="key"></text>
+<text x="284" y="502" font-size="15" class="mono">created_at</text>
+<text x="520" y="502" font-size="13" class="mono muted">DATETIME(6)</text>
+<text x="186" y="528" font-size="12" class="key"></text>
+<text x="284" y="528" font-size="15" class="mono">updated_at</text>
+<text x="520" y="528" font-size="13" class="mono muted">DATETIME(6)</text>
+</g>
+<g id="table-user_session">
+<rect x="730" y="190" width="500" height="284" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
+<path d="M740 190H1220Q1230 190 1230 200V240H730V200Q730 190 740 190Z" fill="#e5eeea"/>
+<text class="mono" x="746" y="221" font-size="22" font-weight="bold">user_session</text>
+<text x="1214" y="220" text-anchor="end" font-size="12" fill="#357362">IMPLEMENTED</text>
+<text x="746" y="265" font-size="13" class="muted">KEY</text>
+<text x="844" y="265" font-size="13" class="muted">COLUMN</text>
+<text x="1080" y="265" font-size="13" class="muted">TYPE / NULL</text>
+<rect x="731" y="274" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="294" font-size="12" class="key">PK</text>
+<text x="844" y="294" font-size="15" class="mono">id</text>
+<text x="1080" y="294" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="746" y="320" font-size="12" class="key">FK/IX</text>
+<text x="844" y="320" font-size="15" class="mono">user_id</text>
+<text x="1080" y="320" font-size="13" class="mono muted">VARCHAR(36)</text>
+<rect x="731" y="326" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="346" font-size="12" class="key">UK</text>
+<text x="844" y="346" font-size="15" class="mono">jti</text>
+<text x="1080" y="346" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="746" y="372" font-size="12" class="key"></text>
+<text x="844" y="372" font-size="15" class="mono">session_type</text>
+<text x="1080" y="372" font-size="13" class="mono muted">VARCHAR(16)</text>
+<rect x="731" y="378" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="398" font-size="12" class="key"></text>
+<text x="844" y="398" font-size="15" class="mono">expires_at</text>
+<text x="1080" y="398" font-size="13" class="mono muted">DATETIME(6)</text>
+<text x="746" y="424" font-size="12" class="key"></text>
+<text x="844" y="424" font-size="15" class="mono">revoked_at</text>
+<text x="1080" y="424" font-size="13" class="mono muted">DATETIME(6) ?</text>
+<rect x="731" y="430" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="450" font-size="12" class="key"></text>
+<text x="844" y="450" font-size="15" class="mono">created_at</text>
+<text x="1080" y="450" font-size="13" class="mono muted">DATETIME(6)</text>
+</g>
+<text x="170" y="742" font-size="14" class="muted">本模块表被外部表引用：audit_log, book, bookmark, disposition, reading_progress, report, task, upload_file（见完整图 / 对应模块图）</text>
+<text x="170" y="772" font-size="12" class="mono muted">Source SHA-256: 3b78f9d41415dbb8af28d6c9e0e8729fba81a4b282c07636a6a7336e43b4f3ac</text>
+</svg>
