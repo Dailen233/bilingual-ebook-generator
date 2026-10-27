@@ -246,75 +246,114 @@ MODULES = {
     "reading": ("书签与阅读位置", {"bookmark", "reading_progress"}),
 }
 
+MODULE_NOTES = {
+    "accounts": "user 为已实现表；其中 status / disabled_reason / disabled_at 为 M2 计划扩展列（用户启停与审核处置落点），当前迁移未实现。",
+}
 
-def render_module(tables, foreign, focus, title, source_hash, revision) -> str:
-    """渲染单一模块图：模块内表全字段 + 内部边实线；跨模块外部父表画成紧凑 EXTERNAL 卡 + 虚线边；外部子表关系以文字说明，不丢失关系。"""
-    by_table = {t.name: t for t in tables}
+
+def render_module(tables, foreign, focus, title, module_key, source_hash, revision) -> str:
+    """渲染单一模块图：模块内表全字段 + 内部边实线（正交、走卡片外）；跨模块外部父表画成紧凑
+    EXTERNAL 卡 + 虚线边（错层走线，标签不重叠）；外部子表关系以文字说明，不丢失关系。"""
     focus_tables = [t for t in tables if t.name in focus]
     parent_names = sorted({f.parent for f in foreign if f.child in focus and f.parent not in focus})
     child_names = sorted({f.child for f in foreign if f.parent in focus and f.child not in focus})
     internal = [f for f in foreign if f.child in focus and f.parent in focus and f.parent != f.child]
     external = [f for f in foreign if f.child in focus and f.parent in parent_names]
 
-    deps = {t.name: {f.parent for f in internal if f.child == t.name} for t in focus_tables}
-    levels: dict[str, int] = {}
-    while len(levels) < len(focus_tables):
-        eligible = [t.name for t in focus_tables if t.name not in levels and deps[t.name] <= set(levels)]
-        if not eligible:
-            raise ValueError(f"Module {title} has non-self FK cycle")
-        for n in eligible:
-            levels[n] = max((levels[p] + 1 for p in deps[n]), default=0)
-    columns: list[list[Table]] = [[] for _ in range(max(levels.values()) + 1)]
-    for t in focus_tables:
-        columns[levels[t.name]].append(t)
-
     width, gap, margin, row_h, header_h = 500, 60, 170, 26, 86
-    positions: dict[str, tuple] = {}
-    y0 = 190
-    focus_bottom = y0
-    for ci, col in enumerate(columns):
-        x = margin + ci * (width + gap)
-        y = y0
-        for t in col:
-            h = header_h + row_h * len(t.columns) + 16
-            positions[t.name] = (x, y, width, h)
-            y += h + 80
-        focus_bottom = max(focus_bottom, y)
+    vgap = 100
+    heights = {t.name: header_h + row_h * len(t.columns) + 16 for t in focus_tables}
 
+    # —— 树形布局：子表在父表下一层，父表居中对齐其子表（列槽），避免同层堆叠与连线遮挡 ——
+    children: dict[str, list[str]] = {t.name: [] for t in focus_tables}
+    for fk in internal:
+        children.setdefault(fk.parent, []).append(fk.child)
+    for k in children:
+        children[k] = sorted(set(children[k]))
+    has_parent = {fk.child for fk in internal}
+    roots = sorted(t.name for t in focus_tables if t.name not in has_parent)
+
+    slots: dict[str, float] = {}
+    _counter = [0]
+
+    def _assign(n):
+        ch = children.get(n, [])
+        if not ch:
+            slots[n] = _counter[0]
+            _counter[0] += 1
+        else:
+            for c in ch:
+                _assign(c)
+            slots[n] = (slots[ch[0]] + slots[ch[-1]]) / 2
+    for r in roots:
+        _assign(r)
+
+    depth: dict[str, int] = {}
+
+    def _set_depth(n, d):
+        depth[n] = d
+        for c in children.get(n, []):
+            _set_depth(c, d + 1)
+    for r in roots:
+        _set_depth(r, 0)
+
+    max_slot = max(slots.values()) if slots else 0
+    n_slots = int(max_slot) + 1
+    max_depth = max(depth.values())
+
+    y_by_depth = {}
+    y = 190
+    for d in range(max_depth + 1):
+        y_by_depth[d] = y
+        rows = [t.name for t in focus_tables if depth[t.name] == d]
+        y += (max((heights[n] for n in rows), default=0) + vgap)
+    focus_bottom = y
+
+    positions = {}
+    for t in focus_tables:
+        positions[t.name] = (margin + slots[t.name] * (width + gap), y_by_depth[depth[t.name]], width, heights[t.name])
+
+    # 外部父表：底部一行；为每条外部边预留独立水平通道（错层，避免标签重叠）
     ext_width, ext_h, ext_gap = 240, 64, 40
-    ext_y = focus_bottom + 60
-    ext_positions: dict[str, tuple] = {}
+    lane_space = len(external) * 24 + 30
+    ext_y = focus_bottom + max(0, lane_space - vgap)
+    ext_positions = {}
     for i, pn in enumerate(parent_names):
         ext_positions[pn] = (margin + i * (ext_width + ext_gap), ext_y, ext_width, ext_h)
 
-    total_width = max(2 * margin + len(columns) * width + (len(columns) - 1) * gap,
+    total_width = max(2 * margin + n_slots * width + (n_slots - 1) * gap,
                       margin + len(parent_names) * (ext_width + ext_gap) - ext_gap + margin)
-    total_height = ext_y + (ext_h + 40 if parent_names else 20) + 100
 
     esc = html.escape
-    out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{total_height}" viewBox="0 0 {total_width} {total_height}">',
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{ext_y + ext_h + 160}" viewBox="0 0 {total_width} {ext_y + ext_h + 160}">',
         f'<title>{esc(title)}</title>',
         f'<desc>Module diagram ({len(focus_tables)} tables). Derived from schema.sql, source {esc(revision)}. Draft, not execution evidence.</desc>',
         '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6b8989"/></marker><marker id="arrowExt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#b58900"/></marker></defs>',
         '<style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#1c3544}.mono{font-family:DejaVu Sans Mono,monospace}.edge{fill:none;stroke:#6b8989;stroke-width:2;marker-end:url(#arrow)}.ext{fill:none;stroke:#b58900;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrowExt)}.edge-label{font-size:13px;paint-order:stroke;stroke:#f7f5ed;stroke-width:6;stroke-linejoin:round}.muted{fill:#5f7078}.key{fill:#9c731f;font-weight:bold}</style>',
-        f'<rect width="{total_width}" height="{total_height}" fill="#f7f5ed"/>',
+        f'<rect width="{total_width}" height="{ext_y + ext_h + 160}" fill="#f7f5ed"/>',
         f'<text x="{margin}" y="60" font-size="18" letter-spacing="3" fill="#9c731f">YIBAN / MODULE</text>',
         f'<text x="{margin}" y="105" font-size="30" font-weight="bold">{esc(title)}</text>',
-        f'<text x="{margin}" y="140" font-size="15" class="muted">模块图 | {len(focus_tables)} 张表 | source {esc(revision)} | 虚线=跨模块外部引用（EXTERNAL）</text>']
+        f'<text x="{margin}" y="140" font-size="15" class="muted">模块图 | {len(focus_tables)} 张表 | source {esc(revision)} | 实线=模块内关系 · 虚线=跨模块外部引用（EXTERNAL）</text>']
 
+    # 内部边：实线正交（父表底边中点 → 层间空行 → 子表顶边中点），走卡片外
     for fk in internal:
         px, py, pw, ph = positions[fk.parent]
         cx, cy, cw, ch = positions[fk.child]
-        sx, sy = px + pw, py + ph / 2
-        ex, ey = cx, cy + ch / 2
-        out.append(f'<path class="edge" d="M {sx} {sy} L {ex} {ey}"/>')
-        out.append(f'<text class="edge-label" text-anchor="middle" x="{(sx+ex)/2}" y="{sy-8}">{esc(", ".join(fk.columns))}</text>')
-    for fk in external:
+        sx, sy = px + pw / 2, py + ph
+        tx, ty = cx + cw / 2, cy
+        mid = (sy + ty) / 2
+        out.append(f'<path class="edge" d="M {sx} {sy} L {sx} {mid} L {tx} {mid} L {tx} {ty}"/>')
+        out.append(f'<text class="edge-label" text-anchor="middle" x="{(sx+tx)/2}" y="{mid-8}">{esc(", ".join(fk.columns))}</text>')
+
+    # 外部边：虚线错层走线（子表底边中点 → 独立水平通道 → 父表顶边中点），标签逐条错开
+    for idx, fk in enumerate(external):
         cx, cy, cw, ch = positions[fk.child]
         ex, ey, ew, eh = ext_positions[fk.parent]
         sx, sy = cx + cw / 2, cy + ch
-        out.append(f'<path class="ext" d="M {sx} {sy} L {ex+ew/2} {ey}"/>')
-        out.append(f'<text class="edge-label" text-anchor="middle" x="{sx}" y="{sy+16}">{esc(", ".join(fk.columns))}</text>')
+        lane = focus_bottom + 16 + idx * 24
+        tx = ex + ew / 2
+        out.append(f'<path class="ext" d="M {sx} {sy} L {sx} {lane} L {tx} {lane} L {tx} {ey}"/>')
+        out.append(f'<text class="edge-label" text-anchor="start" x="{sx+8}" y="{lane-8}">{esc(", ".join(fk.columns))}</text>')
 
     def draw_card(name, x, y, w, h, cols, external=False):
         implemented = name in ("user", "user_session")
@@ -350,9 +389,15 @@ def render_module(tables, foreign, focus, title, source_hash, revision) -> str:
             f'<text x="{x+w-14}" y="{y+25}" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>',
             f'<text x="{x+16}" y="{y+54}" font-size="12" class="muted">id (PK) · 仅引用</text>', '</g>']
 
+    foot_y = ext_y + ext_h + 30
+    note = MODULE_NOTES.get(module_key)
+    if note:
+        out.append(f'<text x="{margin}" y="{foot_y}" font-size="14" class="muted">{esc(note)}</text>')
+        foot_y += 26
     if child_names:
-        out.append(f'<text x="{margin}" y="{total_height-70}" font-size="14" class="muted">本模块表被外部表引用：{esc(", ".join(child_names))}（见完整图 / 对应模块图）</text>')
-    out.append(f'<text x="{margin}" y="{total_height-40}" font-size="12" class="mono muted">Source SHA-256: {source_hash}</text>')
+        out.append(f'<text x="{margin}" y="{foot_y}" font-size="14" class="muted">本模块表被外部表引用：{esc(", ".join(child_names))}（见完整图 / 对应模块图）</text>')
+        foot_y += 26
+    out.append(f'<text x="{margin}" y="{foot_y}" font-size="12" class="mono muted">Source SHA-256: {source_hash}</text>')
     out.append('</svg>')
     svg = "\n".join(out)
     ET.fromstring(svg)
@@ -373,7 +418,7 @@ def main() -> int:
         source_hash = hashlib.sha256(data).hexdigest()
         if args.module:
             title, focus = MODULES[args.module]
-            svg = render_module(tables, foreign, focus, title, source_hash, args.revision)
+            svg = render_module(tables, foreign, focus, title, args.module, source_hash, args.revision)
         else:
             svg = render(tables, foreign, source_hash, args.revision, args.overview)
         args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -1,140 +1,140 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1182" viewBox="0 0 1400 1182">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1258" viewBox="0 0 1400 1258">
 <title>举报审核与管理留痕</title>
 <desc>Module diagram (3 tables). Derived from schema.sql, source working-tree. Draft, not execution evidence.</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6b8989"/></marker><marker id="arrowExt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#b58900"/></marker></defs>
 <style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#1c3544}.mono{font-family:DejaVu Sans Mono,monospace}.edge{fill:none;stroke:#6b8989;stroke-width:2;marker-end:url(#arrow)}.ext{fill:none;stroke:#b58900;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrowExt)}.edge-label{font-size:13px;paint-order:stroke;stroke:#f7f5ed;stroke-width:6;stroke-linejoin:round}.muted{fill:#5f7078}.key{fill:#9c731f;font-weight:bold}</style>
-<rect width="1400" height="1182" fill="#f7f5ed"/>
+<rect width="1400" height="1258" fill="#f7f5ed"/>
 <text x="170" y="60" font-size="18" letter-spacing="3" fill="#9c731f">YIBAN / MODULE</text>
 <text x="170" y="105" font-size="30" font-weight="bold">举报审核与管理留痕</text>
-<text x="170" y="140" font-size="15" class="muted">模块图 | 3 张表 | source working-tree | 虚线=跨模块外部引用（EXTERNAL）</text>
-<path class="edge" d="M 670 332.0 L 730 319.0"/>
-<text class="edge-label" text-anchor="middle" x="700.0" y="324.0">report_id</text>
-<path class="edge" d="M 670 332.0 L 730 683.0"/>
-<text class="edge-label" text-anchor="middle" x="700.0" y="324.0">report_id</text>
-<path class="ext" d="M 420.0 474 L 570.0 978"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="490">reporter_id</text>
-<path class="ext" d="M 420.0 474 L 570.0 978"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="490">reported_user_id</text>
-<path class="ext" d="M 420.0 474 L 290.0 978"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="490">book_id</text>
-<path class="ext" d="M 980.0 448 L 570.0 978"/>
-<text class="edge-label" text-anchor="middle" x="980.0" y="464">actor_id</text>
-<path class="ext" d="M 980.0 838 L 570.0 978"/>
-<text class="edge-label" text-anchor="middle" x="980.0" y="854">actor_id</text>
+<text x="170" y="140" font-size="15" class="muted">模块图 | 3 张表 | source working-tree | 实线=模块内关系 · 虚线=跨模块外部引用（EXTERNAL）</text>
+<path class="edge" d="M 700.0 474 L 700.0 524.0 L 980.0 524.0 L 980.0 574"/>
+<text class="edge-label" text-anchor="middle" x="840.0" y="516.0">report_id</text>
+<path class="edge" d="M 700.0 474 L 700.0 524.0 L 420.0 524.0 L 420.0 574"/>
+<text class="edge-label" text-anchor="middle" x="560.0" y="516.0">report_id</text>
+<path class="ext" d="M 700.0 474 L 700.0 1000 L 570.0 1000 L 570.0 1034"/>
+<text class="edge-label" text-anchor="start" x="708.0" y="992">reporter_id</text>
+<path class="ext" d="M 700.0 474 L 700.0 1024 L 570.0 1024 L 570.0 1034"/>
+<text class="edge-label" text-anchor="start" x="708.0" y="1016">reported_user_id</text>
+<path class="ext" d="M 700.0 474 L 700.0 1048 L 290.0 1048 L 290.0 1034"/>
+<text class="edge-label" text-anchor="start" x="708.0" y="1040">book_id</text>
+<path class="ext" d="M 980.0 832 L 980.0 1072 L 570.0 1072 L 570.0 1034"/>
+<text class="edge-label" text-anchor="start" x="988.0" y="1064">actor_id</text>
+<path class="ext" d="M 420.0 884 L 420.0 1096 L 570.0 1096 L 570.0 1034"/>
+<text class="edge-label" text-anchor="start" x="428.0" y="1088">actor_id</text>
 <g id="table-report">
-<rect x="170" y="190" width="500" height="284" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
-<path d="M180 190H660Q670 190 670 200V240H170V200Q170 190 180 190Z" fill="#e5edf1"/>
-<text class="mono" x="186" y="221" font-size="22" font-weight="bold">report</text>
-<text x="654" y="220" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
-<text x="186" y="265" font-size="13" class="muted">KEY</text>
-<text x="284" y="265" font-size="13" class="muted">COLUMN</text>
-<text x="520" y="265" font-size="13" class="muted">TYPE / NULL</text>
-<rect x="171" y="274" width="498" height="26" fill="#f2f4ef"/>
-<text x="186" y="294" font-size="12" class="key">PK</text>
-<text x="284" y="294" font-size="15" class="mono">id</text>
-<text x="520" y="294" font-size="13" class="mono muted">VARCHAR(36)</text>
-<text x="186" y="320" font-size="12" class="key">FK/IX</text>
-<text x="284" y="320" font-size="15" class="mono">reporter_id</text>
-<text x="520" y="320" font-size="13" class="mono muted">VARCHAR(36)</text>
-<rect x="171" y="326" width="498" height="26" fill="#f2f4ef"/>
-<text x="186" y="346" font-size="12" class="key">FK/IX</text>
-<text x="284" y="346" font-size="15" class="mono">reported_user_id</text>
-<text x="520" y="346" font-size="13" class="mono muted">VARCHAR(36) ?</text>
-<text x="186" y="372" font-size="12" class="key">FK/IX</text>
-<text x="284" y="372" font-size="15" class="mono">book_id</text>
-<text x="520" y="372" font-size="13" class="mono muted">VARCHAR(36) ?</text>
-<rect x="171" y="378" width="498" height="26" fill="#f2f4ef"/>
-<text x="186" y="398" font-size="12" class="key"></text>
-<text x="284" y="398" font-size="15" class="mono">reason</text>
-<text x="520" y="398" font-size="13" class="mono muted">VARCHAR(255)</text>
-<text x="186" y="424" font-size="12" class="key">IX</text>
-<text x="284" y="424" font-size="15" class="mono">status</text>
-<text x="520" y="424" font-size="13" class="mono muted">VARCHAR(16)</text>
-<rect x="171" y="430" width="498" height="26" fill="#f2f4ef"/>
-<text x="186" y="450" font-size="12" class="key"></text>
-<text x="284" y="450" font-size="15" class="mono">created_at</text>
-<text x="520" y="450" font-size="13" class="mono muted">DATETIME(6)</text>
+<rect x="450.0" y="190" width="500" height="284" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
+<path d="M460.0 190H940.0Q950.0 190 950.0 200V240H450.0V200Q450.0 190 460.0 190Z" fill="#e5edf1"/>
+<text class="mono" x="466.0" y="221" font-size="22" font-weight="bold">report</text>
+<text x="934.0" y="220" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
+<text x="466.0" y="265" font-size="13" class="muted">KEY</text>
+<text x="564.0" y="265" font-size="13" class="muted">COLUMN</text>
+<text x="800.0" y="265" font-size="13" class="muted">TYPE / NULL</text>
+<rect x="451.0" y="274" width="498" height="26" fill="#f2f4ef"/>
+<text x="466.0" y="294" font-size="12" class="key">PK</text>
+<text x="564.0" y="294" font-size="15" class="mono">id</text>
+<text x="800.0" y="294" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="466.0" y="320" font-size="12" class="key">FK/IX</text>
+<text x="564.0" y="320" font-size="15" class="mono">reporter_id</text>
+<text x="800.0" y="320" font-size="13" class="mono muted">VARCHAR(36)</text>
+<rect x="451.0" y="326" width="498" height="26" fill="#f2f4ef"/>
+<text x="466.0" y="346" font-size="12" class="key">FK/IX</text>
+<text x="564.0" y="346" font-size="15" class="mono">reported_user_id</text>
+<text x="800.0" y="346" font-size="13" class="mono muted">VARCHAR(36) ?</text>
+<text x="466.0" y="372" font-size="12" class="key">FK/IX</text>
+<text x="564.0" y="372" font-size="15" class="mono">book_id</text>
+<text x="800.0" y="372" font-size="13" class="mono muted">VARCHAR(36) ?</text>
+<rect x="451.0" y="378" width="498" height="26" fill="#f2f4ef"/>
+<text x="466.0" y="398" font-size="12" class="key"></text>
+<text x="564.0" y="398" font-size="15" class="mono">reason</text>
+<text x="800.0" y="398" font-size="13" class="mono muted">VARCHAR(255)</text>
+<text x="466.0" y="424" font-size="12" class="key">IX</text>
+<text x="564.0" y="424" font-size="15" class="mono">status</text>
+<text x="800.0" y="424" font-size="13" class="mono muted">VARCHAR(16)</text>
+<rect x="451.0" y="430" width="498" height="26" fill="#f2f4ef"/>
+<text x="466.0" y="450" font-size="12" class="key"></text>
+<text x="564.0" y="450" font-size="15" class="mono">created_at</text>
+<text x="800.0" y="450" font-size="13" class="mono muted">DATETIME(6)</text>
 </g>
 <g id="table-disposition">
-<rect x="730" y="190" width="500" height="258" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
-<path d="M740 190H1220Q1230 190 1230 200V240H730V200Q730 190 740 190Z" fill="#e5edf1"/>
-<text class="mono" x="746" y="221" font-size="22" font-weight="bold">disposition</text>
-<text x="1214" y="220" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
-<text x="746" y="265" font-size="13" class="muted">KEY</text>
-<text x="844" y="265" font-size="13" class="muted">COLUMN</text>
-<text x="1080" y="265" font-size="13" class="muted">TYPE / NULL</text>
-<rect x="731" y="274" width="498" height="26" fill="#f2f4ef"/>
-<text x="746" y="294" font-size="12" class="key">PK</text>
-<text x="844" y="294" font-size="15" class="mono">id</text>
-<text x="1080" y="294" font-size="13" class="mono muted">VARCHAR(36)</text>
-<text x="746" y="320" font-size="12" class="key">FK/IX</text>
-<text x="844" y="320" font-size="15" class="mono">report_id</text>
-<text x="1080" y="320" font-size="13" class="mono muted">VARCHAR(36)</text>
-<rect x="731" y="326" width="498" height="26" fill="#f2f4ef"/>
-<text x="746" y="346" font-size="12" class="key">FK/IX</text>
-<text x="844" y="346" font-size="15" class="mono">actor_id</text>
-<text x="1080" y="346" font-size="13" class="mono muted">VARCHAR(36)</text>
-<text x="746" y="372" font-size="12" class="key"></text>
-<text x="844" y="372" font-size="15" class="mono">action</text>
-<text x="1080" y="372" font-size="13" class="mono muted">VARCHAR(16)</text>
-<rect x="731" y="378" width="498" height="26" fill="#f2f4ef"/>
-<text x="746" y="398" font-size="12" class="key"></text>
-<text x="844" y="398" font-size="15" class="mono">note</text>
-<text x="1080" y="398" font-size="13" class="mono muted">VARCHAR(512) ?</text>
-<text x="746" y="424" font-size="12" class="key"></text>
-<text x="844" y="424" font-size="15" class="mono">created_at</text>
-<text x="1080" y="424" font-size="13" class="mono muted">DATETIME(6)</text>
+<rect x="730" y="574" width="500" height="258" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
+<path d="M740 574H1220Q1230 574 1230 584V624H730V584Q730 574 740 574Z" fill="#e5edf1"/>
+<text class="mono" x="746" y="605" font-size="22" font-weight="bold">disposition</text>
+<text x="1214" y="604" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
+<text x="746" y="649" font-size="13" class="muted">KEY</text>
+<text x="844" y="649" font-size="13" class="muted">COLUMN</text>
+<text x="1080" y="649" font-size="13" class="muted">TYPE / NULL</text>
+<rect x="731" y="658" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="678" font-size="12" class="key">PK</text>
+<text x="844" y="678" font-size="15" class="mono">id</text>
+<text x="1080" y="678" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="746" y="704" font-size="12" class="key">FK/IX</text>
+<text x="844" y="704" font-size="15" class="mono">report_id</text>
+<text x="1080" y="704" font-size="13" class="mono muted">VARCHAR(36)</text>
+<rect x="731" y="710" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="730" font-size="12" class="key">FK/IX</text>
+<text x="844" y="730" font-size="15" class="mono">actor_id</text>
+<text x="1080" y="730" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="746" y="756" font-size="12" class="key"></text>
+<text x="844" y="756" font-size="15" class="mono">action</text>
+<text x="1080" y="756" font-size="13" class="mono muted">VARCHAR(16)</text>
+<rect x="731" y="762" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="782" font-size="12" class="key"></text>
+<text x="844" y="782" font-size="15" class="mono">note</text>
+<text x="1080" y="782" font-size="13" class="mono muted">VARCHAR(512) ?</text>
+<text x="746" y="808" font-size="12" class="key"></text>
+<text x="844" y="808" font-size="15" class="mono">created_at</text>
+<text x="1080" y="808" font-size="13" class="mono muted">DATETIME(6)</text>
 </g>
 <g id="table-audit_log">
-<rect x="730" y="528" width="500" height="310" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
-<path d="M740 528H1220Q1230 528 1230 538V578H730V538Q730 528 740 528Z" fill="#e5edf1"/>
-<text class="mono" x="746" y="559" font-size="22" font-weight="bold">audit_log</text>
-<text x="1214" y="558" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
-<text x="746" y="603" font-size="13" class="muted">KEY</text>
-<text x="844" y="603" font-size="13" class="muted">COLUMN</text>
-<text x="1080" y="603" font-size="13" class="muted">TYPE / NULL</text>
-<rect x="731" y="612" width="498" height="26" fill="#f2f4ef"/>
-<text x="746" y="632" font-size="12" class="key">PK</text>
-<text x="844" y="632" font-size="15" class="mono">id</text>
-<text x="1080" y="632" font-size="13" class="mono muted">VARCHAR(36)</text>
-<text x="746" y="658" font-size="12" class="key">FK/IX</text>
-<text x="844" y="658" font-size="15" class="mono">actor_id</text>
-<text x="1080" y="658" font-size="13" class="mono muted">VARCHAR(36)</text>
-<rect x="731" y="664" width="498" height="26" fill="#f2f4ef"/>
-<text x="746" y="684" font-size="12" class="key">FK/IX</text>
-<text x="844" y="684" font-size="15" class="mono">report_id</text>
-<text x="1080" y="684" font-size="13" class="mono muted">VARCHAR(36) ?</text>
-<text x="746" y="710" font-size="12" class="key"></text>
-<text x="844" y="710" font-size="15" class="mono">action</text>
-<text x="1080" y="710" font-size="13" class="mono muted">VARCHAR(64)</text>
-<rect x="731" y="716" width="498" height="26" fill="#f2f4ef"/>
-<text x="746" y="736" font-size="12" class="key">IX</text>
-<text x="844" y="736" font-size="15" class="mono">target_type</text>
-<text x="1080" y="736" font-size="13" class="mono muted">VARCHAR(32)</text>
-<text x="746" y="762" font-size="12" class="key">IX</text>
-<text x="844" y="762" font-size="15" class="mono">target_id</text>
-<text x="1080" y="762" font-size="13" class="mono muted">VARCHAR(36)</text>
-<rect x="731" y="768" width="498" height="26" fill="#f2f4ef"/>
-<text x="746" y="788" font-size="12" class="key"></text>
-<text x="844" y="788" font-size="15" class="mono">detail</text>
-<text x="1080" y="788" font-size="13" class="mono muted">VARCHAR(512) ?</text>
-<text x="746" y="814" font-size="12" class="key"></text>
-<text x="844" y="814" font-size="15" class="mono">created_at</text>
-<text x="1080" y="814" font-size="13" class="mono muted">DATETIME(6)</text>
+<rect x="170" y="574" width="500" height="310" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
+<path d="M180 574H660Q670 574 670 584V624H170V584Q170 574 180 574Z" fill="#e5edf1"/>
+<text class="mono" x="186" y="605" font-size="22" font-weight="bold">audit_log</text>
+<text x="654" y="604" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
+<text x="186" y="649" font-size="13" class="muted">KEY</text>
+<text x="284" y="649" font-size="13" class="muted">COLUMN</text>
+<text x="520" y="649" font-size="13" class="muted">TYPE / NULL</text>
+<rect x="171" y="658" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="678" font-size="12" class="key">PK</text>
+<text x="284" y="678" font-size="15" class="mono">id</text>
+<text x="520" y="678" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="186" y="704" font-size="12" class="key">FK/IX</text>
+<text x="284" y="704" font-size="15" class="mono">actor_id</text>
+<text x="520" y="704" font-size="13" class="mono muted">VARCHAR(36)</text>
+<rect x="171" y="710" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="730" font-size="12" class="key">FK/IX</text>
+<text x="284" y="730" font-size="15" class="mono">report_id</text>
+<text x="520" y="730" font-size="13" class="mono muted">VARCHAR(36) ?</text>
+<text x="186" y="756" font-size="12" class="key"></text>
+<text x="284" y="756" font-size="15" class="mono">action</text>
+<text x="520" y="756" font-size="13" class="mono muted">VARCHAR(64)</text>
+<rect x="171" y="762" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="782" font-size="12" class="key">IX</text>
+<text x="284" y="782" font-size="15" class="mono">target_type</text>
+<text x="520" y="782" font-size="13" class="mono muted">VARCHAR(32)</text>
+<text x="186" y="808" font-size="12" class="key">IX</text>
+<text x="284" y="808" font-size="15" class="mono">target_id</text>
+<text x="520" y="808" font-size="13" class="mono muted">VARCHAR(36)</text>
+<rect x="171" y="814" width="498" height="26" fill="#f2f4ef"/>
+<text x="186" y="834" font-size="12" class="key"></text>
+<text x="284" y="834" font-size="15" class="mono">detail</text>
+<text x="520" y="834" font-size="13" class="mono muted">VARCHAR(512) ?</text>
+<text x="186" y="860" font-size="12" class="key"></text>
+<text x="284" y="860" font-size="15" class="mono">created_at</text>
+<text x="520" y="860" font-size="13" class="mono muted">DATETIME(6)</text>
 </g>
 <g id="ext-book">
-<rect x="170" y="978" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
-<path d="M180 978H400Q410 978 410 988V1018H170V988Q170 978 180 978Z" fill="#e8e2d4"/>
-<text class="mono" x="186" y="1004" font-size="17" font-weight="bold">book</text>
-<text x="396" y="1003" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
-<text x="186" y="1032" font-size="12" class="muted">id (PK) · 仅引用</text>
+<rect x="170" y="1034" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
+<path d="M180 1034H400Q410 1034 410 1044V1074H170V1044Q170 1034 180 1034Z" fill="#e8e2d4"/>
+<text class="mono" x="186" y="1060" font-size="17" font-weight="bold">book</text>
+<text x="396" y="1059" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
+<text x="186" y="1088" font-size="12" class="muted">id (PK) · 仅引用</text>
 </g>
 <g id="ext-user">
-<rect x="450" y="978" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
-<path d="M460 978H680Q690 978 690 988V1018H450V988Q450 978 460 978Z" fill="#e8e2d4"/>
-<text class="mono" x="466" y="1004" font-size="17" font-weight="bold">user</text>
-<text x="676" y="1003" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
-<text x="466" y="1032" font-size="12" class="muted">id (PK) · 仅引用</text>
+<rect x="450" y="1034" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
+<path d="M460 1034H680Q690 1034 690 1044V1074H450V1044Q450 1034 460 1034Z" fill="#e8e2d4"/>
+<text class="mono" x="466" y="1060" font-size="17" font-weight="bold">user</text>
+<text x="676" y="1059" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
+<text x="466" y="1088" font-size="12" class="muted">id (PK) · 仅引用</text>
 </g>
-<text x="170" y="1142" font-size="12" class="mono muted">Source SHA-256: 3b78f9d41415dbb8af28d6c9e0e8729fba81a4b282c07636a6a7336e43b4f3ac</text>
+<text x="170" y="1128" font-size="12" class="mono muted">Source SHA-256: 3b78f9d41415dbb8af28d6c9e0e8729fba81a4b282c07636a6a7336e43b4f3ac</text>
 </svg>

@@ -1,24 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="1104" viewBox="0 0 1140 1104">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="846" viewBox="0 0 1400 846">
 <title>书签与阅读位置</title>
 <desc>Module diagram (2 tables). Derived from schema.sql, source working-tree. Draft, not execution evidence.</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6b8989"/></marker><marker id="arrowExt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#b58900"/></marker></defs>
 <style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#1c3544}.mono{font-family:DejaVu Sans Mono,monospace}.edge{fill:none;stroke:#6b8989;stroke-width:2;marker-end:url(#arrow)}.ext{fill:none;stroke:#b58900;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrowExt)}.edge-label{font-size:13px;paint-order:stroke;stroke:#f7f5ed;stroke-width:6;stroke-linejoin:round}.muted{fill:#5f7078}.key{fill:#9c731f;font-weight:bold}</style>
-<rect width="1140" height="1104" fill="#f7f5ed"/>
+<rect width="1400" height="846" fill="#f7f5ed"/>
 <text x="170" y="60" font-size="18" letter-spacing="3" fill="#9c731f">YIBAN / MODULE</text>
 <text x="170" y="105" font-size="30" font-weight="bold">书签与阅读位置</text>
-<text x="170" y="140" font-size="15" class="muted">模块图 | 2 张表 | source working-tree | 虚线=跨模块外部引用（EXTERNAL）</text>
-<path class="ext" d="M 420.0 448 L 850.0 900"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="464">user_id</text>
-<path class="ext" d="M 420.0 448 L 290.0 900"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="464">book_id</text>
-<path class="ext" d="M 420.0 448 L 570.0 900"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="464">paragraph_id</text>
-<path class="ext" d="M 420.0 760 L 850.0 900"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="776">user_id</text>
-<path class="ext" d="M 420.0 760 L 290.0 900"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="776">book_id</text>
-<path class="ext" d="M 420.0 760 L 570.0 900"/>
-<text class="edge-label" text-anchor="middle" x="420.0" y="776">paragraph_id</text>
+<text x="170" y="140" font-size="15" class="muted">模块图 | 2 张表 | source working-tree | 实线=模块内关系 · 虚线=跨模块外部引用（EXTERNAL）</text>
+<path class="ext" d="M 420.0 448 L 420.0 564 L 850.0 564 L 850.0 622"/>
+<text class="edge-label" text-anchor="start" x="428.0" y="556">user_id</text>
+<path class="ext" d="M 420.0 448 L 420.0 588 L 290.0 588 L 290.0 622"/>
+<text class="edge-label" text-anchor="start" x="428.0" y="580">book_id</text>
+<path class="ext" d="M 420.0 448 L 420.0 612 L 570.0 612 L 570.0 622"/>
+<text class="edge-label" text-anchor="start" x="428.0" y="604">paragraph_id</text>
+<path class="ext" d="M 980.0 422 L 980.0 636 L 850.0 636 L 850.0 622"/>
+<text class="edge-label" text-anchor="start" x="988.0" y="628">user_id</text>
+<path class="ext" d="M 980.0 422 L 980.0 660 L 290.0 660 L 290.0 622"/>
+<text class="edge-label" text-anchor="start" x="988.0" y="652">book_id</text>
+<path class="ext" d="M 980.0 422 L 980.0 684 L 570.0 684 L 570.0 622"/>
+<text class="edge-label" text-anchor="start" x="988.0" y="676">paragraph_id</text>
 <g id="table-bookmark">
 <rect x="170" y="190" width="500" height="258" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
 <path d="M180 190H660Q670 190 670 200V240H170V200Q170 190 180 190Z" fill="#e5edf1"/>
@@ -50,52 +50,52 @@
 <text x="520" y="424" font-size="13" class="mono muted">DATETIME(6)</text>
 </g>
 <g id="table-reading_progress">
-<rect x="170" y="528" width="500" height="232" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
-<path d="M180 528H660Q670 528 670 538V578H170V538Q170 528 180 528Z" fill="#e5edf1"/>
-<text class="mono" x="186" y="559" font-size="22" font-weight="bold">reading_progress</text>
-<text x="654" y="558" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
-<text x="186" y="603" font-size="13" class="muted">KEY</text>
-<text x="284" y="603" font-size="13" class="muted">COLUMN</text>
-<text x="520" y="603" font-size="13" class="muted">TYPE / NULL</text>
-<rect x="171" y="612" width="498" height="26" fill="#f2f4ef"/>
-<text x="186" y="632" font-size="12" class="key">PK</text>
-<text x="284" y="632" font-size="15" class="mono">id</text>
-<text x="520" y="632" font-size="13" class="mono muted">VARCHAR(36)</text>
-<text x="186" y="658" font-size="12" class="key">FK/U*</text>
-<text x="284" y="658" font-size="15" class="mono">user_id</text>
-<text x="520" y="658" font-size="13" class="mono muted">VARCHAR(36)</text>
-<rect x="171" y="664" width="498" height="26" fill="#f2f4ef"/>
-<text x="186" y="684" font-size="12" class="key">FK/U*</text>
-<text x="284" y="684" font-size="15" class="mono">book_id</text>
-<text x="520" y="684" font-size="13" class="mono muted">VARCHAR(36)</text>
-<text x="186" y="710" font-size="12" class="key">FK</text>
-<text x="284" y="710" font-size="15" class="mono">paragraph_id</text>
-<text x="520" y="710" font-size="13" class="mono muted">VARCHAR(36)</text>
-<rect x="171" y="716" width="498" height="26" fill="#f2f4ef"/>
-<text x="186" y="736" font-size="12" class="key"></text>
-<text x="284" y="736" font-size="15" class="mono">updated_at</text>
-<text x="520" y="736" font-size="13" class="mono muted">DATETIME(6)</text>
+<rect x="730" y="190" width="500" height="232" rx="10" fill="#fffef9" stroke="#aab9bb" stroke-width="1.5"/>
+<path d="M740 190H1220Q1230 190 1230 200V240H730V200Q730 190 740 190Z" fill="#e5edf1"/>
+<text class="mono" x="746" y="221" font-size="22" font-weight="bold">reading_progress</text>
+<text x="1214" y="220" text-anchor="end" font-size="12" fill="#41657c">PROPOSED</text>
+<text x="746" y="265" font-size="13" class="muted">KEY</text>
+<text x="844" y="265" font-size="13" class="muted">COLUMN</text>
+<text x="1080" y="265" font-size="13" class="muted">TYPE / NULL</text>
+<rect x="731" y="274" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="294" font-size="12" class="key">PK</text>
+<text x="844" y="294" font-size="15" class="mono">id</text>
+<text x="1080" y="294" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="746" y="320" font-size="12" class="key">FK/U*</text>
+<text x="844" y="320" font-size="15" class="mono">user_id</text>
+<text x="1080" y="320" font-size="13" class="mono muted">VARCHAR(36)</text>
+<rect x="731" y="326" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="346" font-size="12" class="key">FK/U*</text>
+<text x="844" y="346" font-size="15" class="mono">book_id</text>
+<text x="1080" y="346" font-size="13" class="mono muted">VARCHAR(36)</text>
+<text x="746" y="372" font-size="12" class="key">FK</text>
+<text x="844" y="372" font-size="15" class="mono">paragraph_id</text>
+<text x="1080" y="372" font-size="13" class="mono muted">VARCHAR(36)</text>
+<rect x="731" y="378" width="498" height="26" fill="#f2f4ef"/>
+<text x="746" y="398" font-size="12" class="key"></text>
+<text x="844" y="398" font-size="15" class="mono">updated_at</text>
+<text x="1080" y="398" font-size="13" class="mono muted">DATETIME(6)</text>
 </g>
 <g id="ext-book">
-<rect x="170" y="900" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
-<path d="M180 900H400Q410 900 410 910V940H170V910Q170 900 180 900Z" fill="#e8e2d4"/>
-<text class="mono" x="186" y="926" font-size="17" font-weight="bold">book</text>
-<text x="396" y="925" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
-<text x="186" y="954" font-size="12" class="muted">id (PK) · 仅引用</text>
+<rect x="170" y="622" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
+<path d="M180 622H400Q410 622 410 632V662H170V632Q170 622 180 622Z" fill="#e8e2d4"/>
+<text class="mono" x="186" y="648" font-size="17" font-weight="bold">book</text>
+<text x="396" y="647" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
+<text x="186" y="676" font-size="12" class="muted">id (PK) · 仅引用</text>
 </g>
 <g id="ext-paragraph">
-<rect x="450" y="900" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
-<path d="M460 900H680Q690 900 690 910V940H450V910Q450 900 460 900Z" fill="#e8e2d4"/>
-<text class="mono" x="466" y="926" font-size="17" font-weight="bold">paragraph</text>
-<text x="676" y="925" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
-<text x="466" y="954" font-size="12" class="muted">id (PK) · 仅引用</text>
+<rect x="450" y="622" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
+<path d="M460 622H680Q690 622 690 632V662H450V632Q450 622 460 622Z" fill="#e8e2d4"/>
+<text class="mono" x="466" y="648" font-size="17" font-weight="bold">paragraph</text>
+<text x="676" y="647" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
+<text x="466" y="676" font-size="12" class="muted">id (PK) · 仅引用</text>
 </g>
 <g id="ext-user">
-<rect x="730" y="900" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
-<path d="M740 900H960Q970 900 970 910V940H730V910Q730 900 740 900Z" fill="#e8e2d4"/>
-<text class="mono" x="746" y="926" font-size="17" font-weight="bold">user</text>
-<text x="956" y="925" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
-<text x="746" y="954" font-size="12" class="muted">id (PK) · 仅引用</text>
+<rect x="730" y="622" width="240" height="64" rx="10" fill="#fffef9" stroke="#b58900" stroke-width="1.5"/>
+<path d="M740 622H960Q970 622 970 632V662H730V632Q730 622 740 622Z" fill="#e8e2d4"/>
+<text class="mono" x="746" y="648" font-size="17" font-weight="bold">user</text>
+<text x="956" y="647" text-anchor="end" font-size="11" fill="#8a6d1f">EXTERNAL</text>
+<text x="746" y="676" font-size="12" class="muted">id (PK) · 仅引用</text>
 </g>
-<text x="170" y="1064" font-size="12" class="mono muted">Source SHA-256: 3b78f9d41415dbb8af28d6c9e0e8729fba81a4b282c07636a6a7336e43b4f3ac</text>
+<text x="170" y="716" font-size="12" class="mono muted">Source SHA-256: 3b78f9d41415dbb8af28d6c9e0e8729fba81a4b282c07636a6a7336e43b4f3ac</text>
 </svg>
