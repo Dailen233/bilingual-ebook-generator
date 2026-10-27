@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="840" height="1260" viewBox="0 0 840 1260">
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="1280" viewBox="0 0 840 1280">
 <title>账号与会话</title>
 <desc>Module diagram (2 tables). Derived from schema.sql, source working-tree. Draft, not execution evidence.</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6b8989"/></marker><marker id="arrowExt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#b58900"/></marker></defs>
 <style>text{font-family:DejaVu Sans,Arial,sans-serif;fill:#1c3544}.mono{font-family:DejaVu Sans Mono,monospace}.edge{fill:none;stroke:#6b8989;stroke-width:2;marker-end:url(#arrow)}.ext{fill:none;stroke:#b58900;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrowExt)}.edge-label{font-size:13px;paint-order:stroke;stroke:#f7f5ed;stroke-width:6;stroke-linejoin:round}.muted{fill:#5f7078}.key{fill:#9c731f;font-weight:bold}</style>
-<rect width="840" height="1260" fill="#f7f5ed"/>
+<rect width="840" height="1280" fill="#f7f5ed"/>
 <text x="170" y="60" font-size="18" letter-spacing="3" fill="#9c731f">YIBAN / MODULE</text>
 <text x="170" y="105" font-size="30" font-weight="bold">账号与会话</text>
 <text x="170" y="140" font-size="15" class="muted">模块图 | 2 张表 | source working-tree | 实线=模块内关系 · 虚线=跨模块外部引用（EXTERNAL）</text>
@@ -87,7 +87,7 @@
 <text x="284" y="912" font-size="15" class="mono">created_at</text>
 <text x="520" y="912" font-size="13" class="mono muted">DATETIME(6)</text>
 </g>
-<text x="170" y="1130" font-size="14" class="muted">user 为已实现表；其中 status / disabled_reason / disabled_at 为 M2 计划扩展列（用户启停与审核处置落点），当前迁移未实现。</text>
-<text x="170" y="1156" font-size="14" class="muted">本模块表被外部表引用：audit_log, book, bookmark, disposition, reading_progress, report, task, upload_file（见完整图 / 对应模块图）</text>
-<text x="170" y="1182" font-size="12" class="mono muted">Source SHA-256: 3b78f9d41415dbb8af28d6c9e0e8729fba81a4b282c07636a6a7336e43b4f3ac</text>
+<text x="170" y="1150" font-size="14" class="muted">user 为已实现表；其中 status / disabled_reason / disabled_at 为 M2 计划扩展列（用户启停与审核处置落点），当前迁移未实现。</text>
+<text x="170" y="1176" font-size="14" class="muted">本模块表被外部表引用：audit_log, book, bookmark, disposition, reading_progress, report, task, upload_file（见完整图 / 对应模块图）</text>
+<text x="170" y="1202" font-size="12" class="mono muted">Source SHA-256: 3b78f9d41415dbb8af28d6c9e0e8729fba81a4b282c07636a6a7336e43b4f3ac</text>
 </svg>

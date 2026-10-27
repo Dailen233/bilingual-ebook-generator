@@ -251,6 +251,18 @@ MODULE_NOTES = {
 }
 
 
+def _assert_no_card_overlap(lanes, label_points, cards):
+    """坐标检查：水平通道与标签不得落入任何表卡片内部；违规抛 ValueError（让渲染显式失败，而非静默产出坏图）。"""
+    for i, y in enumerate(lanes):
+        for x, y0, w, h, name in cards:
+            if y0 < y < y0 + h:
+                raise ValueError(f"外部边水平通道 lane[{i}] y={y} 落入表 {name} 卡片内部 [{y0}, {y0 + h}]")
+    for lx, ly, text in label_points:
+        for x, y0, w, h, name in cards:
+            if x <= lx <= x + w and y0 <= ly <= y0 + h:
+                raise ValueError(f"标签 {text!r} ({lx}, {ly}) 落入表 {name} 卡片内部")
+
+
 def render_module(tables, foreign, focus, title, module_key, source_hash, revision) -> str:
     """渲染单一模块图：模块内表全字段 + 内部边实线（正交、走卡片外）；跨模块外部父表画成紧凑
     EXTERNAL 卡 + 虚线边（错层走线，标签不重叠）；外部子表关系以文字说明，不丢失关系。"""
@@ -313,13 +325,21 @@ def render_module(tables, foreign, focus, title, module_key, source_hash, revisi
     for t in focus_tables:
         positions[t.name] = (margin + slots[t.name] * (width + gap), y_by_depth[depth[t.name]], width, heights[t.name])
 
-    # 外部父表：底部一行；为每条外部边预留独立水平通道（错层，避免标签重叠）
+    # 外部边水平通道：自 focus_bottom 下方逐条错开（每条独立 y，标签不重叠）
     ext_width, ext_h, ext_gap = 240, 64, 40
-    lane_space = len(external) * 24 + 30
-    ext_y = focus_bottom + max(0, lane_space - vgap)
+    lanes = [focus_bottom + 16 + i * 24 for i in range(len(external))]
+    # 外部父表整体放到最后一条通道下方，预留标签间距（通道/标签绝不落入卡片内部）
+    ext_y = (lanes[-1] + 40) if lanes else (focus_bottom + 20)
     ext_positions = {}
     for i, pn in enumerate(parent_names):
         ext_positions[pn] = (margin + i * (ext_width + ext_gap), ext_y, ext_width, ext_h)
+
+    # 坐标检查：收集所有卡片盒（模块内表 + 外部父表），校验水平通道不落入任何卡片内部
+    cards = [(positions[t.name][0], positions[t.name][1], positions[t.name][2], positions[t.name][3], t.name)
+             for t in focus_tables]
+    cards += [(ext_positions[pn][0], ext_positions[pn][1], ext_positions[pn][2], ext_positions[pn][3], pn)
+              for pn in parent_names]
+    _assert_no_card_overlap(lanes, [], cards)
 
     total_width = max(2 * margin + n_slots * width + (n_slots - 1) * gap,
                       margin + len(parent_names) * (ext_width + ext_gap) - ext_gap + margin)
@@ -336,6 +356,7 @@ def render_module(tables, foreign, focus, title, module_key, source_hash, revisi
         f'<text x="{margin}" y="140" font-size="15" class="muted">模块图 | {len(focus_tables)} 张表 | source {esc(revision)} | 实线=模块内关系 · 虚线=跨模块外部引用（EXTERNAL）</text>']
 
     # 内部边：实线正交（父表底边中点 → 层间空行 → 子表顶边中点），走卡片外
+    label_points = []
     for fk in internal:
         px, py, pw, ph = positions[fk.parent]
         cx, cy, cw, ch = positions[fk.child]
@@ -344,16 +365,20 @@ def render_module(tables, foreign, focus, title, module_key, source_hash, revisi
         mid = (sy + ty) / 2
         out.append(f'<path class="edge" d="M {sx} {sy} L {sx} {mid} L {tx} {mid} L {tx} {ty}"/>')
         out.append(f'<text class="edge-label" text-anchor="middle" x="{(sx+tx)/2}" y="{mid-8}">{esc(", ".join(fk.columns))}</text>')
+        label_points.append(((sx + tx) / 2, mid - 8, ", ".join(fk.columns)))
 
     # 外部边：虚线错层走线（子表底边中点 → 独立水平通道 → 父表顶边中点），标签逐条错开
     for idx, fk in enumerate(external):
         cx, cy, cw, ch = positions[fk.child]
         ex, ey, ew, eh = ext_positions[fk.parent]
         sx, sy = cx + cw / 2, cy + ch
-        lane = focus_bottom + 16 + idx * 24
+        lane = lanes[idx]
         tx = ex + ew / 2
         out.append(f'<path class="ext" d="M {sx} {sy} L {sx} {lane} L {tx} {lane} L {tx} {ey}"/>')
         out.append(f'<text class="edge-label" text-anchor="start" x="{sx+8}" y="{lane-8}">{esc(", ".join(fk.columns))}</text>')
+        label_points.append((sx + 8, lane - 8, ", ".join(fk.columns)))
+
+    _assert_no_card_overlap([], label_points, cards)
 
     def draw_card(name, x, y, w, h, cols, external=False):
         implemented = name in ("user", "user_session")
