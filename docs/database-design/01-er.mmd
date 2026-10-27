@@ -1,0 +1,109 @@
+erDiagram
+    USER ||--o{ USER_SESSION : "登录产生"
+    USER ||--o{ UPLOAD_FILE : "上传"
+    USER ||--o{ TASK : "创建"
+    USER ||--o{ BOOK : "拥有"
+    UPLOAD_FILE ||--o{ TASK : "被处理为"
+    TASK o|--o{ CHAPTER : "提取为"
+    CHAPTER ||--o{ PARAGRAPH : "包含"
+    PARAGRAPH ||--o{ TRANSLATION_UNIT : "切分为"
+    TASK ||--o| BOOK : "完成产出(幂等)"
+    TASK o|--o| TASK : "重试(唯一)"
+    BOOK ||--o{ BOOK_FILE : "生成"
+
+    USER {
+        varchar36 id PK "UUID"
+        varchar255 email UK "登录邮箱"
+        varchar255 password_hash "bcrypt"
+        varchar100 display_name
+        varchar16 role "user/admin"
+        datetime6 created_at
+        datetime6 updated_at
+    }
+    USER_SESSION {
+        varchar36 id PK
+        varchar36 user_id FK
+        varchar36 jti UK
+        varchar16 session_type "user/admin"
+        datetime6 expires_at
+        datetime6 revoked_at "可空"
+        datetime6 created_at
+    }
+    UPLOAD_FILE {
+        varchar36 id PK
+        varchar36 owner_id FK
+        varchar255 original_name
+        varchar512 storage_ref
+        varchar16 ext "首版 txt"
+        bigint size_bytes
+        char64 sha256 "可空"
+        datetime6 created_at
+    }
+    TASK {
+        varchar36 id PK
+        varchar36 owner_id FK
+        varchar36 file_id FK
+        varchar36 retry_of_task_id FK_UK "可空"
+        varchar16 src_lang
+        varchar16 tgt_lang
+        varchar64 svc_key
+        varchar128 svc_name "可空"
+        varchar64 model_key "可空"
+        varchar128 model_name "可空"
+        varchar64 style_key
+        varchar128 style_name "可空"
+        varchar16 status "pending/running/done/failed"
+        varchar16 stage "可空"
+        varchar255 fail_reason "可空"
+        int total_units
+        int done_units
+        int failed_units
+        varchar64 completion_key UK "可空"
+        datetime6 created_at
+        datetime6 started_at "可空"
+        datetime6 finished_at "可空"
+        datetime6 updated_at
+    }
+    CHAPTER {
+        varchar36 id PK
+        varchar36 task_id FK
+        int seq_no
+        varchar255 title "可空"
+    }
+    PARAGRAPH {
+        varchar36 id PK
+        varchar36 chapter_id FK
+        int seq_no
+        text source_text
+    }
+    TRANSLATION_UNIT {
+        varchar36 id PK
+        varchar36 paragraph_id FK
+        int seq_no
+        text source_text
+        text target_text "可空"
+        varchar16 status "pending/translated/failed"
+        int retry_count
+    }
+    BOOK {
+        varchar36 id PK
+        varchar36 owner_id FK
+        varchar36 task_id UK
+        varchar255 name
+        varchar16 src_lang
+        varchar16 tgt_lang
+        varchar128 svc_name "可空"
+        varchar128 model_name "可空"
+        varchar128 style_name "可空"
+        int failed_units
+        datetime6 created_at
+    }
+    BOOK_FILE {
+        varchar36 id PK
+        varchar36 book_id FK
+        varchar16 format "epub/pdf"
+        varchar512 storage_ref
+        bigint size_bytes "可空"
+        char64 sha256 "可空"
+        datetime6 generated_at
+    }
