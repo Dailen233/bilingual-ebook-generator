@@ -29,7 +29,10 @@ FILES = [
     "docs/database-design/02-字段字典.md", "docs/database-design/字段字典.html",
     "docs/database-design/03-页面数据对应表.md", "docs/database-design/页面数据对应表.html",
     "docs/database-design/schema.sql", "docs/database-design/er.svg",
-    "docs/database-design/er-overview.svg", "docs/database-design/04-设计验证记录.md",
+    "docs/database-design/er-overview.svg",
+    "docs/database-design/er-module-accounts.svg", "docs/database-design/er-module-generation.svg",
+    "docs/database-design/er-module-moderation.svg", "docs/database-design/er-module-reading.svg",
+    "docs/database-design/04-设计验证记录.md",
     "scripts/render_database_er.py", "scripts/md2html.py",
     "scripts/build_release.py", "scripts/validate_design_mysql.py",
 ]
@@ -48,8 +51,51 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def check_links(base: Path):
+    """核对目录内 HTML 的本地相对链接/资源存在性。
+
+    保留 <script src="..."> 的外部 JS 引用（先提取，再移除脚本正文）；
+    脚本正文里动态拼接的 href/src 属 JS 字符串，予以忽略（不整段丢弃 script 时漏掉外部 JS）。
+    返回 (是否全部存在, 失效列表)。
+    """
+    missing = []
+    for p in sorted(base.rglob("*.html")):
+        text = p.read_text(encoding="utf-8", errors="replace")
+        # 1) 先提取 <script ... src="..."> 的资源引用（含 type/module 等属性的 opener）
+        script_srcs = re.findall(r'<script\b[^>]*\bsrc="([^"]+)"', text, flags=re.I)
+        # 2) 移除 <script>/<style> 正文（其中的动态拼接字符串忽略），但 src 已在上面保留
+        text = re.sub(r"<script\b[^>]*>.*?</script>", "", text, flags=re.S | re.I)
+        text = re.sub(r"<style\b[^>]*>.*?</style>", "", text, flags=re.S | re.I)
+        # 3) 常规 href/src 属性 + 保留的外部 script src 一并检查
+        refs = re.findall(r'(?:href|src)="([^"]+)"', text) + script_srcs
+        for target in refs:
+            target = target.strip()
+            if not target or target.startswith(("http://", "https://", "mailto:", "#", "javascript:", "data:")):
+                continue
+            resolved = ((base / target.lstrip("/")) if target.startswith("/") else (p.parent / target)).resolve()
+            if not resolved.exists():
+                missing.append(f"{p.relative_to(base)} -> {target}")
+    return missing
+
+
 def main() -> int:
-    out = Path(sys.argv[1]) if len(sys.argv) > 1 else (
+    args = sys.argv[1:]
+    if "--links-only" in args:
+        i = args.index("--links-only")
+        base = Path(args[i + 1]) if i + 1 < len(args) else None
+        if not base or not base.is_dir():
+            print("用法：python3 scripts/build_release.py --links-only <暂存目录>")
+            return 2
+        missing = check_links(base)
+        if missing:
+            print("[STOP] 存在失效相对链接/资源：")
+            for x in missing:
+                print("   ", x)
+            return 1
+        print("[RESULT] 相对链接/资源存在性核对通过")
+        return 0
+
+    out = Path(args[0]) if args else (
         Path("/tmp") / f"yiban-release-{datetime.datetime.now():%Y%m%d-%H%M%S}")
     if out.exists():
         print(f"[STOP] 暂存目录已存在：{out}（避免覆盖，请换目录）")
@@ -96,22 +142,10 @@ def main() -> int:
         return 1
     print("[RESULT] sha256sum -c 全部通过")
 
-    # 相对链接/资源存在性核对（仅本地相对路径）
-    missing = []
-    for p in sorted(out.rglob("*.html")):
-        text = p.read_text(encoding="utf-8", errors="replace")
-        # 仅核对真实 HTML 属性：排除 <script>/<style> 内动态拼接的 href/src
-        text = re.sub(r"<script\b[^>]*>.*?</script>", "", text, flags=re.S | re.I)
-        text = re.sub(r"<style\b[^>]*>.*?</style>", "", text, flags=re.S | re.I)
-        for m in re.finditer(r'(?:href|src)="([^"]+)"', text):
-            target = m.group(1).strip()
-            if not target or target.startswith(("http://", "https://", "mailto:", "#", "javascript:", "data:")):
-                continue
-            resolved = ((out / target.lstrip("/")) if target.startswith("/") else (p.parent / target)).resolve()
-            if not resolved.exists():
-                missing.append(f"{p.relative_to(out)} -> {target}")
+    # 相对链接/资源存在性核对（保留 <script src>，忽略脚本正文动态串）
+    missing = check_links(out)
     if missing:
-        print("[STOP] 存在失效相对链接：")
+        print("[STOP] 存在失效相对链接/资源：")
         for x in missing:
             print("   ", x)
         return 1

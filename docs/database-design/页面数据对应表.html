@@ -46,7 +46,7 @@ pre{background:#f0ede3;padding:12px;border-radius:8px;overflow:auto}
 <tr><td>创建任务-提交（new-task.html）</td><td><code>task</code>（owner_id/file_id/src_lang/tgt_lang/svc/style/status='pending'/counters=0）</td><td>后端（创建任务接口）</td><td>校验属主/文件/配置后 INSERT</td><td>持久化</td></tr>
 <tr><td>任务详情-处理中（task-detail.html）</td><td><code>task.stage</code>/<code>status</code>/<code>done_units</code>；<code>chapter</code>/<code>paragraph</code>/<code>translation_unit</code></td><td>后端（后台任务）</td><td>extract→align→translate→layout→export 各阶段写结构/单元，回写进度</td><td>持久化</td></tr>
 <tr><td>任务详情-失败（task-detail.html）</td><td><code>task.status='failed'</code>/<code>fail_reason</code>；<code>translation_unit.status='failed'</code>/<code>target_text=原文</code></td><td>后端</td><td>提取/切分/翻译/导出失败时 UPDATE</td><td>持久化</td></tr>
-<tr><td>任务详情-完成（task-detail.html）</td><td><code>book</code>/<code>book_file</code>（由 task 幂等入库）</td><td>后端（完成流程）</td><td><code>task.status='done'</code> 且 EPUB 可用时 INSERT book→book_file</td><td>持久化</td></tr>
+<tr><td>任务详情-完成（task-detail.html）</td><td><code>book</code>/<code>book_file</code>（由 task 幂等入库）</td><td>后端（完成流程）</td><td>成果文件就绪后同一事务 INSERT book→book_file→最后 <code>task.status='done'</code></td><td>持久化</td></tr>
 <tr><td>任务详情-进度环/百分比</td><td><code>done_units/total_units</code></td><td>—</td><td>读取（计算）</td><td>计算（<code>total_units=0</code> 不除）</td></tr>
 <tr><td>任务详情-失败单元示例</td><td><code>translation_unit.status</code></td><td>—</td><td>读取</td><td>▶ 原型示意（真实版为逐单元明细）</td></tr>
 <tr><td>重试（task-detail 重试按钮）</td><td><code>task</code>（新建；retry_of_task_id=旧 id）</td><td>后端（重试接口）</td><td>旧 failed 不变，新建 task 从 pending 起</td><td>持久化</td></tr>
