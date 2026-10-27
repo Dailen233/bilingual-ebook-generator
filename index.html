@@ -56,9 +56,9 @@
 <section>
   <h2>2. 检查顺序（建议）</h2>
   <div class="steps">
-    <div class="step"><b>① 需求</b><br><a href="需求分析与设计文档说明.md">需求分析与设计文档说明.md</a><br><span class="note">来源追踪、FR/NFR、四层范围、验收口径</span></div>
+    <div class="step"><b>① 需求</b><br><a href="需求分析与设计文档说明.html">直读 HTML</a> · <a href="需求分析与设计文档说明.md">.md 下载</a><br><span class="note">来源追踪、FR/NFR、四层范围、验收口径</span></div>
     <div class="step"><b>② 原型</b><br><a href="prototype/v4/index.html">prototype/v4/index.html</a><br><span class="note">用户端 8 页 + 管理端 4 页，多页静态站</span></div>
-    <div class="step"><b>③ 数据库</b><br><a href="docs/database-design/README.md">docs/database-design/README.md</a><br><span class="note">14 表目标模型、字段字典、ER、页面数据对应、schema.sql</span></div>
+    <div class="step"><b>③ 数据库</b><br><a href="docs/database-design/数据库设计说明.html">直读 HTML</a> · <a href="docs/database-design/README.md">.md</a><br><span class="note">14 表目标模型、字段字典、ER、页面数据对应、schema.sql</span></div>
     <div class="step"><b>④ 状态/接口</b><br><a href="任务状态机与进度口径草案.md">任务状态机草案</a> · <a href="任务接口契约草案.md">任务接口</a> · <a href="书库与成果接口契约草案.md">书库接口</a></div>
     <div class="step"><b>⑤ 进度</b><br>见本页 §6<br><span class="note">账号已实现 / 整书业务待实现</span></div>
   </div>
@@ -78,7 +78,7 @@
     <tr><td><code>report</code> / <code>disposition</code> / <code>audit_log</code></td><td>举报审核 + 处置记录 + 管理留痕（FR-15/G11）</td><td><span class="tag tag-plan">计划扩展 M2</span></td></tr>
     <tr><td><code>bookmark</code> / <code>reading_progress</code></td><td>书签 + 阅读位置（FR-12/13）</td><td><span class="tag tag-plan">计划扩展 M4</span></td></tr>
   </table>
-  <p class="note">资源用量不单独建表，由聚合查询承载（待确认展示口径）。完整字段/约束/删除规则见 <a href="docs/database-design/02-字段字典.md">字段字典</a>；页面↔数据见 <a href="docs/database-design/03-页面数据对应表.md">页面数据对应表</a>；设计 SQL 见 <a href="docs/database-design/schema.sql">schema.sql</a>。</p>
+  <p class="note">资源用量不单独建表，由聚合查询承载（待确认展示口径）。直读：<a href="docs/database-design/数据库设计说明.html">数据库说明</a> · <a href="docs/database-design/字段字典.html">字段字典</a> · <a href="docs/database-design/页面数据对应表.html">页面数据对应表</a>；设计 SQL 见 <a href="docs/database-design/schema.sql">schema.sql</a>；<strong>真实 MySQL 8.4 验收</strong>见 <a href="docs/database-design/04-设计验证记录.md">设计验证记录</a>。</p>
 </section>
 
 <section>
@@ -106,7 +106,7 @@
     <tr><td>yiban-api</td><td>真实账号：注册/登录/me/退出、user/user_session（0001/0002）、JWT(cookie)+CSRF、role 服务端校验、MySQL 8.4</td><td>上传/解析/翻译/任务/EPUB 整书业务（上传方案评审中）</td></tr>
     <tr><td>yiban-web</td><td>已迁移首页、登录、注册、工作台（守卫+登录态）</td><td>创建任务/任务详情/书库/阅读器页面迁移与接口接入</td></tr>
     <tr><td>yiban-admin</td><td>管理员登录、会话恢复、守卫、退出</td><td>清理教学示例；任务/失败只读查看迁移</td></tr>
-    <tr><td>中央仓</td><td>需求、设计、完整 v4 原型、数据库设计检查版（14 表 + ER SVG）</td><td>浏览器人工验收待完成</td></tr>
+    <tr><td>中央仓</td><td>需求、设计、完整 v4 原型、数据库设计检查版（14 表 + ER SVG + <strong>MySQL 8.4 已验证</strong>）</td><td>浏览器人工验收待完成</td></tr>
   </table>
   <p class="note">原型的登录/翻译/书库/下载均为本地模拟，不宣称为真实业务；真实账号实现见 yiban-api 源码与迁移。</p>
 </section>
@@ -114,10 +114,12 @@
 <section>
   <h2>7. 资料与源码下载入口</h2>
   <ul>
-    <li>需求：<a href="需求分析与设计文档说明.md">需求分析与设计文档说明.md</a>（Markdown 原文）</li>
+    <li>需求：<a href="需求分析与设计文档说明.html">直读 HTML</a> · <a href="需求分析与设计文档说明.md">.md 下载</a></li>
     <li>逻辑模型：<a href="数据库逻辑模型草案.md">数据库逻辑模型草案.md</a></li>
-    <li>设计 SQL：<a href="docs/database-design/schema.sql">docs/database-design/schema.sql</a> · 字段字典 <a href="docs/database-design/02-字段字典.md">02-字段字典.md</a> · ER 源 <a href="docs/database-design/01-er.mmd">01-er.mmd</a></li>
+    <li>数据库直读：<a href="docs/database-design/数据库设计说明.html">数据库说明</a> · <a href="docs/database-design/字段字典.html">字段字典</a> · <a href="docs/database-design/页面数据对应表.html">页面数据对应表</a></li>
+    <li>设计 SQL：<a href="docs/database-design/schema.sql">docs/database-design/schema.sql</a> · ER 源 <a href="docs/database-design/01-er.mmd">01-er.mmd</a></li>
     <li>ER 图：<a href="docs/database-design/er.svg">er.svg</a> · <a href="docs/database-design/er-overview.svg">er-overview.svg</a></li>
+    <li>MySQL 验收：<a href="docs/database-design/04-设计验证记录.md">04-设计验证记录.md</a>（8.4.13 实测通过）</li>
     <li>发布与回退：<a href="docs/发布说明.md">发布说明.md</a> · 检查入口 <a href="docs/课程检查入口.md">课程检查入口.md</a></li>
     <li>完整文件清单与校验见 <a href="docs/发布说明.md">发布说明</a> §发布白名单。</li>
   </ul>
