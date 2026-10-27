@@ -68,6 +68,8 @@
 
     <section class="db-running" id="db-running" aria-label="进行中的任务"></section>
 
+    <section class="db-running" id="db-failed" aria-label="失败的任务"></section>
+
     <section class="db-recent">
       <div class="db-sec-head">
         <h2>最近的书</h2>
@@ -158,6 +160,26 @@
     } else {
       run.innerHTML =
         '<div class="db-run-empty"><span>暂无进行中的任务</span><a class="link" href="new-task.html">新建任务 →</a></div>';
+    }
+
+    // 失败的任务（可回到详情重试）
+    var failed = document.getElementById('db-failed');
+    var failedTasks = V2.getFailedTasks();
+    if (failedTasks.length) {
+      failed.innerHTML =
+        '<div class="db-sec-head"><h2>失败的任务</h2></div>'
+        + failedTasks.map(function (x) {
+            return '<div class="db-run-card">'
+              + '<div class="db-run-info">'
+              +   '<span class="db-kicker" style="color:var(--err,#b3261e)">失败 · 可重试</span>'
+              +   '<div class="db-run-title">' + esc(x.name) + '</div>'
+              +   '<div class="db-run-meta">' + esc(x.src) + ' → ' + esc(x.tgt) + '</div>'
+              + '</div>'
+              + '<a class="btn btn-ghost btn-sm" href="task-detail.html?id=' + encodeURIComponent(x.id) + '">查看详情</a>'
+              + '</div>';
+          }).join('');
+    } else {
+      failed.innerHTML = '';
     }
 
     // 最近的书（不含已在继续阅读中的那本）

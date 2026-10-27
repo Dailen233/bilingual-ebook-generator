@@ -132,6 +132,9 @@
   function getRunningTasks() {
     return readTasks().filter(function (t) { return t.state === 'running'; });
   }
+  function getFailedTasks() {
+    return readTasks().filter(function (t) { return t.state === 'failed'; });
+  }
 
   // ---- 进度：按 wall-clock 确定性计算（多标签页重复读取不累加） ----
   function progressOf(t, now) {
@@ -258,7 +261,7 @@
     setUser: setUser, setAdmin: setAdmin, clearAuth: clearAuth,
     clearUser: clearUser, clearAdmin: clearAdmin,
     getTasks: readTasks, getTask: getTask, createTask: createTask,
-    updateTask: updateTask, getRunningTasks: getRunningTasks,
+    updateTask: updateTask, getRunningTasks: getRunningTasks, getFailedTasks: getFailedTasks,
     advanceTasks: advanceTasks, progressOf: progressOf, ensureLibraryBook: ensureLibraryBook,
     DEMO_USER: DEMO_USER, DEMO_ADMIN: DEMO_ADMIN,
     requireUser: requireUser, requireAdmin: requireAdmin
