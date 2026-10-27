@@ -6,6 +6,7 @@
 不打包 .git / 私有配置 / 临时产物。
 """
 import datetime
+import gzip
 import hashlib
 import re
 import shutil
@@ -62,19 +63,23 @@ def _git_short_sha() -> str:
 
 
 def export_tar(base: Path, dest_dir: Path, commit_short: str) -> Path:
-    """把已校验的发布目录打成 tar.gz（文件按序、mtime/属主归零以求可复现），返回包路径。"""
+    """把已校验的发布目录打成 tar.gz（文件按序、tar 成员 mtime/属主归零 + gzip 头时间戳固定，
+    以求字节级可复现），返回包路径。"""
     dest_dir.mkdir(parents=True, exist_ok=True)
     tarpath = dest_dir / f"bilingual-ebook-generator-{commit_short}.tar.gz"
-    with tarfile.open(tarpath, "w:gz") as tar:
-        for p in sorted(base.rglob("*")):
-            if not p.is_file():
-                continue
-            info = tar.gettarinfo(str(p), arcname=p.relative_to(base).as_posix())
-            info.mtime = 0
-            info.uid = info.gid = 0
-            info.uname = info.gname = ""
-            with open(p, "rb") as f:
-                tar.addfile(info, f)
+    with open(tarpath, "wb") as fobj:
+        # gzip 头含 MTIME 字段，须显式固定为 0，否则默认写当前时间、破坏字节级可复现。
+        with gzip.GzipFile(filename="", mode="wb", fileobj=fobj, compresslevel=9, mtime=0) as gz:
+            with tarfile.open(fileobj=gz, mode="w") as tar:
+                for p in sorted(base.rglob("*")):
+                    if not p.is_file():
+                        continue
+                    info = tar.gettarinfo(str(p), arcname=p.relative_to(base).as_posix())
+                    info.mtime = 0
+                    info.uid = info.gid = 0
+                    info.uname = info.gname = ""
+                    with open(p, "rb") as f:
+                        tar.addfile(info, f)
     return tarpath
 
 
