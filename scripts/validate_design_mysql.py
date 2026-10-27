@@ -137,21 +137,127 @@ def parse_schema(path) -> dict:
     return model
 
 
-def _norm_check_clause(clause: str):
-    """把 CHECK 子句规范化为可比较的「比较式集合」（忽略大小写/反引号/AND/OR/多余括号）。"""
-    s = clause.lower().replace("`", "")
-    parts = re.split(r"\band\b|\bor\b", s)
-    comps = []
-    for p in parts:
-        p = p.strip().strip("()").strip()
-        p = re.sub(r"\s+", " ", p)
-        if p:
-            comps.append(p)
-    return sorted(comps)
+# ---- CHECK 表达式「结构保持」的比较：保留 AND/OR 与嵌套分组；无法解析则显式失败 ----
+_TOKEN_RE = re.compile(r"\d+|[a-z_][a-z0-9_]*|<=|>=|<>|!=|=|<|>|\(|\)")
 
 
-def _diff(expected, actual, label) -> list[str]:
-    return [f"{label}: 期望 {expected!r}，实际 {actual!r}"]
+def _tokenize_check(s: str):
+    """把 CHECK 子句规范化为 token 流（去反引号、转小写、压缩空白）。无法词法化则抛 ValueError。"""
+    s = s.lower().replace("`", "")
+    pos, toks = 0, []
+    while pos < len(s):
+        while pos < len(s) and s[pos] in " \t\r\n":
+            pos += 1
+        if pos >= len(s):
+            break
+        m = _TOKEN_RE.match(s, pos)
+        if not m:
+            raise ValueError(f"无法词法化的 CHECK 片段：{s[pos:pos + 20]!r}（完整 {s!r}）")
+        toks.append(m.group(0))
+        pos = m.end()
+    return toks
+
+
+def _parse_check_or(toks, i):
+    node, i = _parse_check_and(toks, i)
+    while i < len(toks) and toks[i] == "or":
+        i += 1
+        right, i = _parse_check_and(toks, i)
+        node = ("OR", node, right)
+    return node, i
+
+
+def _parse_check_and(toks, i):
+    node, i = _parse_check_primary(toks, i)
+    while i < len(toks) and toks[i] == "and":
+        i += 1
+        right, i = _parse_check_primary(toks, i)
+        node = ("AND", node, right)
+    return node, i
+
+
+def _parse_check_primary(toks, i):
+    if i >= len(toks):
+        raise ValueError("CHECK 表达式意外结束")
+    if toks[i] == "(":
+        node, i = _parse_check_or(toks, i + 1)
+        if i >= len(toks) or toks[i] != ")":
+            raise ValueError("CHECK 括号不匹配")
+        return node, i + 1
+    return _parse_check_cmp(toks, i)
+
+
+def _parse_check_operand(toks, i):
+    if i >= len(toks):
+        raise ValueError("CHECK 缺少操作数")
+    t = toks[i]
+    if t in ("and", "or", "(", ")", "is", "not", "null") or t in (">=", "<=", "=", "<>", "!=", "<", ">"):
+        raise ValueError(f"CHECK 操作数位置出现非法符号：{t!r}")
+    return t, i + 1
+
+
+def _parse_check_cmp(toks, i):
+    left, i = _parse_check_operand(toks, i)
+    if i >= len(toks):
+        raise ValueError("CHECK 比较式缺少运算符")
+    op = toks[i]
+    if op == "is":
+        neg = False
+        i += 1
+        if i < len(toks) and toks[i] == "not":
+            neg = True
+            i += 1
+        if i >= len(toks) or toks[i] != "null":
+            raise ValueError("CHECK 中 IS 后应为 [NOT] NULL")
+        return ("NOTNULL" if neg else "ISNULL", left), i + 1
+    if op in (">=", "<=", "=", "<>", "!=", "<", ">"):
+        right, i = _parse_check_operand(toks, i + 1)
+        return (op, left, right), i
+    raise ValueError(f"CHECK 无法解析的运算符：{op!r}")
+
+
+def parse_check(clause: str):
+    """把 CHECK 子句解析为「保留 AND/OR 与嵌套分组」的结构化树。无法解析时抛 ValueError。"""
+    toks = _tokenize_check(clause)
+    if not toks:
+        raise ValueError("CHECK 子句为空")
+    node, i = _parse_check_or(toks, 0)
+    if i != len(toks):
+        raise ValueError(f"CHECK 存在无法解析的残余内容：{toks[i:]!r}")
+    return node
+
+
+def _diff(expected, actual, label) -> str:
+    return f"{label}: 期望 {expected!r}，实际 {actual!r}"
+
+
+def _diff_checks(expected: dict, actual: dict) -> list[str]:
+    """比较 CHECK。expected: {约束名: (表名, 定义)}；actual: {约束名: (表名, ENFORCED, 定义)}。
+    比较：名称集合、所属表、是否启用、结构保持的表达式。无法解析即记为差异（不回退为忽略）。"""
+    diffs = []
+    exp_names, act_names = set(expected), set(actual)
+    if exp_names != act_names:
+        diffs.append(_diff(sorted(exp_names), sorted(act_names), "CHECK 名集合"))
+    for cn in sorted(exp_names & act_names):
+        exp_table, exp_clause = expected[cn]
+        act_table, enforced, act_clause = actual[cn]
+        if act_table != exp_table:
+            diffs.append(_diff(exp_table, act_table, f"CHECK {cn}.所属表"))
+        if enforced != "YES":
+            diffs.append(_diff("YES", enforced, f"CHECK {cn}.启用"))
+        try:
+            exp_ast = parse_check(exp_clause)
+        except ValueError as e:
+            diffs.append(f"CHECK {cn}.定义（schema.sql）：解析失败 → {e}")
+            continue
+        try:
+            act_ast = parse_check(act_clause)
+        except ValueError as e:
+            diffs.append(f"CHECK {cn}.定义（库内实际）：解析失败 → {e}")
+            continue
+        if exp_ast != act_ast:
+            diffs.append(_diff(exp_clause, act_clause, f"CHECK {cn}.定义（结构不等价）"))
+    return diffs
 
 
 def deep_check(conn, model: dict) -> int:
@@ -276,7 +382,7 @@ def deep_check(conn, model: dict) -> int:
                 diffs.append(_diff("唯一" if nonuniq == 0 else "非唯一",
                                    "唯一" if a["non_unique"] == 0 else "非唯一", f"{t}.{iname}.唯一性"))
 
-    # 5) CHECK：名称、是否启用、定义（比较式集合）
+    # 5) CHECK：名称、所属表、是否启用、定义（保留 AND/OR 与嵌套分组的结构比较）
     cur.execute(
         "SELECT tc.table_name, tc.constraint_name, tc.enforced, cc.check_clause "
         "FROM information_schema.table_constraints tc "
@@ -286,16 +392,8 @@ def deep_check(conn, model: dict) -> int:
     actual_ck = {}
     for t, cn, enforced, clause in cur.fetchall():
         actual_ck[cn] = (t, enforced, clause)
-    exp_ck = {cn: t for t in exp_names for cn in model[t]["check"]}
-    if set(actual_ck) != set(exp_ck):
-        diffs.append(_diff(sorted(exp_ck), sorted(actual_ck), "CHECK 名集合"))
-    else:
-        for cn, t in exp_ck.items():
-            _, enforced, clause = actual_ck[cn]
-            if enforced != "YES":
-                diffs.append(_diff("YES", enforced, f"{t}.{cn}.启用"))
-            if _norm_check_clause(clause) != _norm_check_clause(model[t]["check"][cn]):
-                diffs.append(_diff(model[t]["check"][cn], clause, f"{t}.{cn}.定义"))
+    exp_ck = {cn: (t, model[t]["check"][cn]) for t in exp_names for cn in model[t]["check"]}
+    diffs.extend(_diff_checks(exp_ck, actual_ck))
 
     # ---- 汇总输出 ----
     total_indexes = total_declared + total_auto
@@ -430,6 +528,27 @@ def run_selftest() -> int:
         check("接受版本 8.4.13", True)
     except ValueError:
         check("接受版本 8.4.13", False)
+
+    # CHECK 结构保持比较：AND→OR、改变分组、约束移到错误表、无法解析均须检出；MySQL 归一化形式须等价
+    check("CHECK: AND→OR 必须不等价", parse_check("a >= 0 AND b >= 0") != parse_check("a >= 0 OR b >= 0"))
+    check("CHECK: 改变分组必须不等价",
+          parse_check("(a >= 0 AND b >= 0) OR c >= 0") != parse_check("a >= 0 AND (b >= 0 OR c >= 0)"))
+    check("CHECK: 等价形式归一化一致",
+          parse_check("size_bytes >= 0") == parse_check("(`size_bytes` >= 0)"))
+    check("CHECK: 举报二选一（schema.sql vs 库内归一化）结构一致",
+          parse_check("(reported_user_id IS NOT NULL AND book_id IS NULL) OR (reported_user_id IS NULL AND book_id IS NOT NULL)")
+          == parse_check("(((`reported_user_id` is not null) and (`book_id` is null)) or ((`reported_user_id` is null) and (`book_id` is not null)))"))
+    try:
+        parse_check("a >= ")
+        check("CHECK: 无法解析必须失败", False)
+    except ValueError:
+        check("CHECK: 无法解析必须失败", True)
+    # 约束移到错误表：_diff_checks 比较所属表，必须产生差异
+    tbl_diffs = _diff_checks(
+        {"chk_x": ("book", "size_bytes >= 0")},
+        {"chk_x": ("upload_file", "YES", "(`size_bytes` >= 0)")},
+    )
+    check("CHECK: 约束移到错误表必须检出", any("所属表" in d for d in tbl_diffs))
 
     class FakeConn:
         def __init__(self):
