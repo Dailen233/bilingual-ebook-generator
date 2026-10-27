@@ -67,6 +67,19 @@
     ]);
   }
 
+  // ---- 成果示例数据（唯一来源：任务结果页与阅读页共用，避免两页内容矛盾）----
+  // 每个单元 src=原文、tgt=译文；status='failed' 表示翻译失败、保留原文（tgt 回退为原文）。
+  // 失败计数、失败标记、原文回退均由本份数据派生，不在各页分别维护。
+  var DEMO_UNITS = [
+    { src: 'The fog rolled in from the harbor at dusk.', tgt: '黄昏时分，雾从港口漫了进来。', status: 'translated' },
+    { src: 'She locked the door and waited.', tgt: 'She locked the door and waited.', status: 'failed' },
+    { src: '“It would come, in the end,” she told herself.', tgt: '“终会到来的，”她对自己说。', status: 'translated' },
+    { src: 'The lighthouse blinked twice, then went dark.', tgt: '灯塔闪了两次，随后熄灭。', status: 'translated' }
+  ];
+  function demoFailedCount() {
+    return DEMO_UNITS.filter(function (u) { return u.status === 'failed'; }).length;
+  }
+
   // ---- 登录态（模拟） ----
   function isUser() { return !!read(K.user, null); }
   function isAdmin() { return !!read(K.admin, null); }
@@ -177,7 +190,7 @@
         t.cur = t.total;
         t.state = 'done';
         t.updatedAt = now;
-        if (!t.failedCount) t.failedCount = 1; // 示例：含 1 个失败单元（与结果/阅读示例一致）
+        if (!t.failedCount) t.failedCount = demoFailedCount(); // 失败计数派生自共享成果示例数据，与结果/阅读页一致
         var book = ensureLibraryBook(t);
         t.bookId = book.id;
         changed = true;
@@ -264,6 +277,7 @@
     updateTask: updateTask, getRunningTasks: getRunningTasks, getFailedTasks: getFailedTasks,
     advanceTasks: advanceTasks, progressOf: progressOf, ensureLibraryBook: ensureLibraryBook,
     DEMO_USER: DEMO_USER, DEMO_ADMIN: DEMO_ADMIN,
+    DEMO_UNITS: DEMO_UNITS, demoFailedCount: demoFailedCount,
     requireUser: requireUser, requireAdmin: requireAdmin
   };
   window.AI_TRANSLATE = AI_TRANSLATE;

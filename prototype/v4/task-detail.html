@@ -110,8 +110,7 @@
       <div class="meta-row" id="d-failflag" style="margin:0 0 8px"></div>
       <div class="meta-row" id="d-cfg" style="margin:0 0 22px"></div>
       <div class="ornament">对照示意 · 示例数据</div>
-      <div class="cmp"><div><h4>原文</h4><div class="c-src">"The fog rolled in from the harbor at dusk."</div></div><div><h4>译文</h4><div class="c-tgt">黄昏时分，雾从港口漫了进来。</div></div></div>
-      <div class="cmp"><div><h4>原文</h4><div class="c-src">"She locked the door and waited." <span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span></div></div><div><h4>译文</h4><div class="c-tgt">—（该单元保留原文，示例）</div></div></div>
+      <div id="d-cmp"></div>
       <div class="row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px">
         <a class="btn btn-primary" id="d-open" href="reader.html">打开双语阅读 →</a>
         <button class="btn btn-gold" onclick="fakeDl('epub')">下载 EPUB</button>
@@ -148,6 +147,19 @@
   function currentTask(){ return taskId ? V2.getTask(taskId) : V2.getTask(); }
   function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
 
+  // 对照示意：复用 V2.DEMO_UNITS（唯一成果示例数据），失败单元标失败标记并回退原文
+  function renderCmp() {
+    return V2.DEMO_UNITS.map(function (u) {
+      var failed = u.status === 'failed';
+      var badge = failed ? ' <span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span>' : '';
+      var tgt = failed
+        ? esc(u.tgt) + ' <span style="color:var(--muted);font-size:12px">（保留原文）</span>'
+        : esc(u.tgt);
+      return '<div class="cmp"><div><h4>原文</h4><div class="c-src">' + esc(u.src) + badge + '</div></div>'
+        + '<div><h4>译文</h4><div class="c-tgt">' + tgt + '</div></div></div>';
+    }).join('');
+  }
+
   function showBlock(id) {
     ['run-block','fail-block','done-block','empty-block'].forEach(function(x){
       document.getElementById(x).style.display = (x===id)?'block':'none';
@@ -161,6 +173,7 @@
       ? '<span class="badge b-err"><span class="dot" style="background:var(--err)"></span>含失败单元 × '+t.failedCount+'</span>'
       : '<span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>全部成功</span>';
     document.getElementById('d-cfg').innerHTML = renderConfig(t);
+    document.getElementById('d-cmp').innerHTML = renderCmp();
     var bookId = t.bookId || ('b_' + t.id);
     document.getElementById('d-open').href = 'reader.html?id=' + encodeURIComponent(bookId);
     showBlock('done-block');

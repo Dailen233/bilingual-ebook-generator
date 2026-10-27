@@ -148,14 +148,7 @@
   function fakeDl(k){ alert('示例：下载双语电子书.'+k+'（原型不产生真实文件）'); }
   function soon(f){ alert('「'+f+'」属于后续里程碑（M4 站内阅读体验），本原型未实现，仅示意入口。'); }
 
-  // 示例对照单元（逐组：原文 + 译文）。失败单元仅按总数展示（见副标题），
-  // 无单元明细时不虚构具体失败位置、不把译文回退为原文。
-  var DEMO_UNITS = [
-    { src: 'The fog rolled in from the harbor at dusk.', tgt: '黄昏时分，雾从港口漫了进来。' },
-    { src: 'She locked the door and waited.', tgt: '她锁上门，静静地等待。' },
-    { src: '“It would come, in the end,” she told herself.', tgt: '“终会到来的，”她对自己说。' },
-    { src: 'The lighthouse blinked twice, then went dark.', tgt: '灯塔闪了两次，随后熄灭。' }
-  ];
+  // 成果示例数据复用 app.js 的 V2.DEMO_UNITS（唯一来源，含失败单元状态），不在本页内联。
 
   var FONT_MIN = 1, FONT_MAX = 3;
 
@@ -228,16 +221,20 @@
     if (b.modelName) sub += ' · ' + b.modelName;
     if (b.styleName) sub += ' · ' + b.styleName;
     sub += ' · 示例占位译文';
-    if (b.failedCount > 0) sub += ' · 含失败单元 × ' + b.failedCount;
+    var failedN = V2.demoFailedCount();
+    if (failedN > 0) sub += ' · 含失败单元 × ' + failedN;
     document.getElementById('b-sub').textContent = sub;
     document.getElementById('src-label').textContent = '原文 · ' + (b.src || '原文');
     document.getElementById('tgt-label').textContent = '译文 · ' + (b.tgt || '译文');
 
-    // 逐组渲染
-    document.getElementById('pairs').innerHTML = DEMO_UNITS.map(function (u, i) {
+    // 逐组渲染（复用 V2.DEMO_UNITS；失败单元标失败标记并回退原文，与任务结果页一致）
+    document.getElementById('pairs').innerHTML = V2.DEMO_UNITS.map(function (u, i) {
+      var failed = u.status === 'failed';
+      var src = esc(u.src) + (failed ? ' <span class="badge b-err" style="margin-left:6px">翻译失败 · 保留原文</span>' : '');
+      var tgt = esc(u.tgt) + (failed ? ' <span style="color:var(--muted);font-size:12px">（保留原文）</span>' : '');
       return '<div class="rpair" data-idx="' + i + '">'
-        + '<div class="rp-src"><p>' + esc(u.src) + '</p></div>'
-        + '<div class="rp-tgt"><p>' + esc(u.tgt) + '</p></div>'
+        + '<div class="rp-src"><p>' + src + '</p></div>'
+        + '<div class="rp-tgt"><p>' + tgt + '</p></div>'
         + '</div>';
     }).join('');
     document.title = b.name + ' · 双语阅读';
