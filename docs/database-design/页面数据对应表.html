@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>页面数据对应表</title>
+<style>
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;color:#1c3544;background:#f7f5ed;margin:0;line-height:1.65}
+main{max-width:980px;margin:0 auto;padding:24px 20px 60px}
+h1{border-bottom:2px solid #357362;padding-bottom:8px;font-size:24px}
+h2{border-left:4px solid #357362;padding-left:10px;margin-top:30px;font-size:19px}
+h3{font-size:15px;color:#9c731f}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:10px 0}
+th,td{border:1px solid #d8e0dd;padding:6px 10px;text-align:left;vertical-align:top}
+th{background:#eef3f0}
+code{background:#eef3f0;padding:1px 5px;border-radius:4px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+blockquote{border-left:4px solid #d8e0dd;margin:10px 0;padding:6px 14px;color:#5f7078;background:#fffef9}
+pre{background:#f0ede3;padding:12px;border-radius:8px;overflow:auto}
+.note{font-size:12.5px;color:#5f7078;border-top:1px solid #d8e0dd;margin-top:32px;padding-top:10px}
+</style>
+</head>
+<body><main>
+<h1>页面 → 数据实体与字段 → 写入角色/触发时机 → 实现状态</h1>
+<blockquote>目的：逐表说明「谁在什么页面、何时创建或更新这条数据」，并区分<strong>持久化字段</strong>、<strong>计算结果</strong>（冗余聚合/派生）与<strong>仅供展示</strong>。<br>图例：✅ 已实现（yiban-web / yiban-admin / yiban-api 源码）；✍ 本次拟定设计（待实现）；⬜ 计划扩展（M2/M4 目标设计，非已实现）；▶ 仅供展示/前端模拟（不落库）。</blockquote>
+<h2>1. 账号与会话（已实现 ✅）</h2>
+<table>
+<thead><tr><th>页面（原型 / 真实）</th><th>实体与字段</th><th>写入角色</th><th>触发时机</th><th>性质</th></tr></thead>
+<tbody>
+<tr><td>注册（register.html / yiban-web RegisterView）</td><td><code>user</code>（email/password_hash/display_name/role='user'/created_at）</td><td>后端（注册接口）</td><td>提交注册表单成功后 INSERT</td><td>持久化</td></tr>
+<tr><td>登录（login.html / yiban-web LoginView）</td><td><code>user_session</code>（user_id/jti/session_type/expires_at/created_at）</td><td>后端（登录接口）</td><td>校验成功后 INSERT 会话；签发 JWT（jti 落库）</td><td>持久化</td></tr>
+<tr><td>退出（顶栏 / 各端）</td><td><code>user_session.revoked_at</code></td><td>后端（退出接口）</td><td>退出时 UPDATE revoked_at（撤销 jti）</td><td>持久化</td></tr>
+<tr><td>管理端登录（admin-login.html / yiban-admin login）</td><td><code>user_session</code>（session_type='admin'）</td><td>后端</td><td>管理员登录成功 INSERT</td><td>持久化</td></tr>
+<tr><td>顶栏头像/昵称</td><td><code>user.display_name</code>/<code>email</code> 首字符</td><td>—</td><td>读取（登录态）</td><td>▶ 展示（原型用 localStorage 模拟）</td></tr>
+</tbody></table>
+<h2>2. 文件（本次拟定 ✍）</h2>
+<table>
+<thead><tr><th>页面</th><th>实体与字段</th><th>写入角色</th><th>触发时机</th><th>性质</th></tr></thead>
+<tbody>
+<tr><td>创建任务-选文件（new-task.html / 待迁移）</td><td><code>upload_file</code>（owner_id/original_name/storage_ref/ext/size_bytes/sha256/created_at）</td><td>后端（上传接口）</td><td>上传成功后 INSERT；属主=当前用户</td><td>持久化</td></tr>
+<tr><td>同上（无效拦截）</td><td>—</td><td>—</td><td><code>.docx</code>/<code>.epub/.pdf</code> 首版拦截：<strong>不创建 upload_file</strong></td><td>无落库</td></tr>
+</tbody></table>
+<h2>3. 任务与正文结构（本次拟定 ✍）</h2>
+<table>
+<thead><tr><th>页面</th><th>实体与字段</th><th>写入角色</th><th>触发时机</th><th>性质</th></tr></thead>
+<tbody>
+<tr><td>创建任务-提交（new-task.html）</td><td><code>task</code>（owner_id/file_id/src_lang/tgt_lang/svc/style/status='pending'/counters=0）</td><td>后端（创建任务接口）</td><td>校验属主/文件/配置后 INSERT</td><td>持久化</td></tr>
+<tr><td>任务详情-处理中（task-detail.html）</td><td><code>task.stage</code>/<code>status</code>/<code>done_units</code>；<code>chapter</code>/<code>paragraph</code>/<code>translation_unit</code></td><td>后端（后台任务）</td><td>extract→align→translate→layout→export 各阶段写结构/单元，回写进度</td><td>持久化</td></tr>
+<tr><td>任务详情-失败（task-detail.html）</td><td><code>task.status='failed'</code>/<code>fail_reason</code>；<code>translation_unit.status='failed'</code>/<code>target_text=原文</code></td><td>后端</td><td>提取/切分/翻译/导出失败时 UPDATE</td><td>持久化</td></tr>
+<tr><td>任务详情-完成（task-detail.html）</td><td><code>book</code>/<code>book_file</code>（由 task 幂等入库）</td><td>后端（完成流程）</td><td><code>task.status='done'</code> 且 EPUB 可用时 INSERT book→book_file</td><td>持久化</td></tr>
+<tr><td>任务详情-进度环/百分比</td><td><code>done_units/total_units</code></td><td>—</td><td>读取（计算）</td><td>计算（<code>total_units=0</code> 不除）</td></tr>
+<tr><td>任务详情-失败单元示例</td><td><code>translation_unit.status</code></td><td>—</td><td>读取</td><td>▶ 原型示意（真实版为逐单元明细）</td></tr>
+<tr><td>重试（task-detail 重试按钮）</td><td><code>task</code>（新建；retry_of_task_id=旧 id）</td><td>后端（重试接口）</td><td>旧 failed 不变，新建 task 从 pending 起</td><td>持久化</td></tr>
+</tbody></table>
+<h2>4. 成果与阅读（本次拟定 ✍）</h2>
+<table>
+<thead><tr><th>页面</th><th>实体与字段</th><th>写入角色</th><th>触发时机</th><th>性质</th></tr></thead>
+<tbody>
+<tr><td>书库列表（library.html）</td><td><code>book</code>（name/语言对/配置快照/failed_units/created_at）</td><td>—</td><td>读取（WHERE owner_id=当前用户）</td><td>持久化</td></tr>
+<tr><td>书库-同名两书</td><td><code>book.id</code> + 配置快照 + created_at</td><td>—</td><td>读取区分</td><td>持久化</td></tr>
+<tr><td>阅读器-对照（reader.html）</td><td><code>chapter</code>/<code>paragraph</code>/<code>translation_unit</code>（seq/title/source/target/status）</td><td>—</td><td>读取（经 book.task_id 分页）</td><td>持久化</td></tr>
+<tr><td>阅读器-失败单元总数</td><td><code>book.failed_units</code></td><td>—</td><td>读取</td><td>计算（汇总自 translation_unit）</td></tr>
+<tr><td>阅读器-逐单元失败</td><td><code>translation_unit.status='failed'</code></td><td>—</td><td>读取</td><td>持久化（原型仅总数，真实版有明细）</td></tr>
+<tr><td>下载 EPUB（reader/task-detail）</td><td><code>book_file</code>（storage_ref 不暴露）</td><td>—</td><td>读取（task.status=done 且文件可读）</td><td>持久化</td></tr>
+</tbody></table>
+<h2>5. 管理端最小集（本次拟定 ✍；已实现部分为登录/会话 ✅）</h2>
+<table>
+<thead><tr><th>页面（原型 / 真实）</th><th>实体与字段</th><th>写入角色</th><th>触发时机</th><th>性质</th></tr></thead>
+<tbody>
+<tr><td>管理概览（admin.html / yiban-admin home/overview）</td><td><code>task</code>/<code>book</code> 统计</td><td>—</td><td>读取（只读运维视角）</td><td>计算/展示</td></tr>
+<tr><td>管理任务（admin-tasks.html / 待迁移）</td><td><code>task</code>（status/fail_reason/owner 元数据）</td><td>—</td><td>读取（全量只读）</td><td>持久化</td></tr>
+<tr><td>管理审核（admin-reviews.html / 待迁移）</td><td>举报/审核数据（M2）</td><td>—</td><td>未实现</td><td>设计建议（M2）</td></tr>
+</tbody></table>
+<h2>6. 管理端完整 + 阅读体验（计划扩展 ⬜，M2/M4 目标设计）</h2>
+<table>
+<thead><tr><th>页面（原型 / 计划）</th><th>实体与字段</th><th>写入角色</th><th>触发时机</th><th>性质</th></tr></thead>
+<tbody>
+<tr><td>举报（阅读页/书库；原型 admin-reviews 示意）</td><td><code>report</code>（reporter_id/reason/status='pending' + reported_user_id/book_id 二选一）</td><td>后端（举报接口）</td><td>用户提交举报 INSERT</td><td>持久化（M2；CHECK 拒绝无/歧义对象）</td></tr>
+<tr><td>审核队列（admin-reviews.html）</td><td><code>report.status</code>（pending/under_review）</td><td>后端</td><td>管理员领取/审理受控 UPDATE</td><td>持久化（M2）；队列为 status 过滤视图；report 为状态实体</td></tr>
+<tr><td>审核详情·查看私有内容</td><td><code>audit_log</code>（actor/report_id/action/target）</td><td>后端</td><td>在审核上下文查看文件 INSERT（report_id 结构化关联）；无上下文拒绝 → access_denied 且 report_id 空</td><td>持久化（M2）</td></tr>
+<tr><td>处置（通过/驳回/屏蔽/删除）</td><td><code>disposition</code>（report_id/actor/action/note）+ 同事务落点：<code>user.status='disabled'</code> 或 <code>book.status='blocked/removed'</code></td><td>后端</td><td>管理员处置 INSERT 并应用目标状态</td><td>持久化（M2；非仅追加记录）</td></tr>
+<tr><td>用户与权限（admin/users，M2）</td><td><code>user.status</code>/<code>disabled_reason</code>/<code>disabled_at</code></td><td>后端（管理端）</td><td>管理员启用/停用 UPDATE</td><td>持久化（M2；0001 无此列）</td></tr>
+<tr><td>资源用量（admin/usage，M2）</td><td>—</td><td>—</td><td>聚合查询（Σ size_bytes、按 status 计数）</td><td>计算（不建表）</td></tr>
+<tr><td>添加书签（reader，M4）</td><td><code>bookmark</code></td><td>后端</td><td>用户点书签 INSERT（校验有权访问该书 + 段落属该书）</td><td>持久化（M4）</td></tr>
+<tr><td>阅读位置/继续阅读（reader/dashboard，M4）</td><td><code>reading_progress</code>（UK(user_id,book_id) upsert）</td><td>后端</td><td>翻页/离开时 upsert（校验同上）</td><td>持久化（M4）</td></tr>
+</tbody></table>
+<h2>逐表「谁在何时创建/更新」一句话</h2>
+<table>
+<thead><tr><th>表</th><th>谁在什么页面、何时</th></tr></thead>
+<tbody>
+<tr><td>user</td><td>用户/管理员在注册页或受控 CLI 创建；资料更新时更新 updated_at；管理员停用写 status/disabled_*</td></tr>
+<tr><td>user_session</td><td>后端在登录接口创建；退出接口撤销（revoked_at）</td></tr>
+<tr><td>upload_file</td><td>用户创建任务页上传成功后由后端创建</td></tr>
+<tr><td>task</td><td>用户创建任务页提交后创建（pending）；后台任务推进更新 status/stage/计数；重试新建</td></tr>
+<tr><td>chapter/paragraph/translation_unit</td><td>后台任务在提取/切分阶段批量写入；翻译阶段更新单元状态</td></tr>
+<tr><td>book</td><td>后台完成流程在完成事务内创建（book → book_file → task.status=done）</td></tr>
+<tr><td>book_file</td><td>后台完成流程在 book 之后创建（format=epub）</td></tr>
+<tr><td>report</td><td>用户在阅读页/书库举报（对象用户/书籍二选一）时创建（pending）；管理员审核受控推进 status（状态实体，非 append-only）</td></tr>
+<tr><td>disposition</td><td>管理员在审核页处置时创建（append-only）；同事务落到 user.status 或 book.status</td></tr>
+<tr><td>audit_log</td><td>管理员在审核上下文查看私有内容时写入（report_id 结构化关联；append-only）</td></tr>
+<tr><td>bookmark</td><td>用户在阅读器添加书签时创建（校验有权访问 + 段落属该书）</td></tr>
+<tr><td>reading_progress</td><td>用户翻页/离开阅读器时 upsert（每人每书一行；一致性校验同 bookmark）</td></tr>
+</tbody></table>
+<h2>持久化 vs 计算 vs 展示（汇总）</h2>
+<ul><li><strong>持久化</strong>：<code>user</code>/<code>user_session</code>/<code>upload_file</code>/<code>task</code>/<code>chapter</code>/<code>paragraph</code>/<code>translation_unit</code>/<code>book</code>/<code>book_file</code> 全部字段；计划扩展的 <code>report</code>/<code>disposition</code>/<code>audit_log</code>/<code>bookmark</code>/<code>reading_progress</code> 全部字段，以及 <code>user.status/disabled_*</code>、<code>book.status</code> 计划扩展列。</li><li><strong>持久化展示快照（落库，非"纯展示"）</strong>：<code>task.svc_name/model_name/style_name</code>、<code>book.svc_name/model_name/style_name</code> 随任务/书落库，供任务详情/书库直接展示，<strong>不归入「不落库的纯展示数据」</strong>。</li><li><strong>计算/冗余聚合</strong>：<code>task.total_units/done_units/failed_units</code>（派生自 translation_unit.status）、<code>book.failed_units</code>（快照自 task）、进度百分比（<code>done/total</code>）、资源用量（聚合查询，不建表）。</li><li><strong>仅供展示（真正不落库）</strong>：原型 localStorage 模拟的顶栏昵称/头像、失败单元示例；前端即时计算的进度百分比。</li></ul>
+<p class="note">本文档由对应 Markdown 用 scripts/md2html.py 生成；原始 Markdown 为权威源，可下载/直读。</p>
+</main></body></html>

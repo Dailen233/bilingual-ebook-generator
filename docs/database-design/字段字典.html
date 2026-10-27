@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>字段字典</title>
+<style>
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;color:#1c3544;background:#f7f5ed;margin:0;line-height:1.65}
+main{max-width:980px;margin:0 auto;padding:24px 20px 60px}
+h1{border-bottom:2px solid #357362;padding-bottom:8px;font-size:24px}
+h2{border-left:4px solid #357362;padding-left:10px;margin-top:30px;font-size:19px}
+h3{font-size:15px;color:#9c731f}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:10px 0}
+th,td{border:1px solid #d8e0dd;padding:6px 10px;text-align:left;vertical-align:top}
+th{background:#eef3f0}
+code{background:#eef3f0;padding:1px 5px;border-radius:4px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+blockquote{border-left:4px solid #d8e0dd;margin:10px 0;padding:6px 14px;color:#5f7078;background:#fffef9}
+pre{background:#f0ede3;padding:12px;border-radius:8px;overflow:auto}
+.note{font-size:12.5px;color:#5f7078;border-top:1px solid #d8e0dd;margin-top:32px;padding-top:10px}
+</style>
+</head>
+<body><main>
+<h1>字段字典（目标模型 · MySQL 8.4）</h1>
+<blockquote>与 <code>schema.sql</code> 逐列一致；类型中的 <code>datetime6</code> = <code>DATETIME(6)</code> 无时区 UTC、<code>char64</code> = <code>CHAR(64)</code>、<code>varcharN</code> = <code>VARCHAR(N)</code>。实现状态列：✅ 已实现（对应 alembic 0001/0002）、✍ 本次拟定、⬜ 计划扩展（M2/M4 目标设计，非已实现）。<br>约定：所有主键 <code>VARCHAR(36)</code> UUID；枚举落 <code>VARCHAR(16)</code> + 应用层校验；时间列无 DB 默认值（应用层写 naive UTC）；外键默认 <code>RESTRICT</code>（不级联删除，用户用停用而非物理删除）。</blockquote>
+<h2>user 用户账号 ✅（status/disabled_* 为 ⬜ 计划扩展 M2，0001 无此三列）</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>用户唯一标识（UUID，服务端生成）</td></tr>
+<tr><td>email</td><td>varchar255</td><td>否</td><td>—</td><td>UK</td><td>登录邮箱（strip+lower 规范化）</td></tr>
+<tr><td>password_hash</td><td>varchar255</td><td>否</td><td>—</td><td></td><td>bcrypt 哈希，绝不明文</td></tr>
+<tr><td>display_name</td><td>varchar100</td><td>否</td><td>—</td><td></td><td>显示名/昵称</td></tr>
+<tr><td>role</td><td>varchar16</td><td>否</td><td>'user'</td><td></td><td>user/admin（应用层校验；权限模型首版仅此二值）</td></tr>
+<tr><td>status</td><td>varchar16</td><td>否</td><td>'active'</td><td></td><td>active/disabled（启用/停用；⬜ M2 计划扩展列）</td></tr>
+<tr><td>disabled_reason</td><td>varchar255</td><td>是</td><td>—</td><td></td><td>停用原因（disabled 时非空）</td></tr>
+<tr><td>disabled_at</td><td>datetime6</td><td>是</td><td>—</td><td></td><td>停用时间 UTC</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>注册时间 UTC</td></tr>
+<tr><td>updated_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>更新时间 UTC</td></tr>
+</tbody></table>
+<h2>user_session 用户会话 ✅</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>会话标识（UUID）</td></tr>
+<tr><td>user_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>归属用户</td></tr>
+<tr><td>jti</td><td>varchar36</td><td>否</td><td>—</td><td>UK</td><td>JWT 的 jti（退出撤销用）</td></tr>
+<tr><td>session_type</td><td>varchar16</td><td>否</td><td>'user'</td><td></td><td>user/admin</td></tr>
+<tr><td>expires_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>到期时间（与 JWT exp 一致）</td></tr>
+<tr><td>revoked_at</td><td>datetime6</td><td>是</td><td>—</td><td></td><td>撤销时间，非空即失效</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>登录时间 UTC</td></tr>
+</tbody></table>
+<h2>upload_file 上传文件 ✍（上传方案待评审，对齐 yiban-api 4e3c762）</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>文件记录标识（UUID）</td></tr>
+<tr><td>owner_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>属主（服务端写入=当前用户）</td></tr>
+<tr><td>original_name</td><td>varchar255</td><td>否</td><td>—</td><td></td><td>原始文件名（仅展示，不作唯一标识/磁盘路径）</td></tr>
+<tr><td>storage_ref</td><td>varchar255</td><td>否</td><td>—</td><td>UK</td><td>存储引用（服务端相对引用如 {uuid}.txt；唯一防覆盖；不暴露前端）</td></tr>
+<tr><td>ext</td><td>varchar16</td><td>否</td><td>—</td><td></td><td>扩展名（小写、含前导点；首版 ".txt"，epub/pdf 输入后续扩展）</td></tr>
+<tr><td>size_bytes</td><td>bigint</td><td>否</td><td>—</td><td></td><td>大小（字节，实际落盘数，≥0 CHECK）</td></tr>
+<tr><td>sha256</td><td>char64</td><td>否</td><td>—</td><td></td><td>小写十六进制 SHA-256（完整性校验；不加唯一约束）</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>上传时间 UTC</td></tr>
+</tbody></table>
+<h2>task 任务 ✍</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>任务标识（UUID）</td></tr>
+<tr><td>owner_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>属主（派生自 file.owner_id）</td></tr>
+<tr><td>file_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>来源文件</td></tr>
+<tr><td>retry_of_task_id</td><td>varchar36</td><td>是</td><td>—</td><td>FK, UK</td><td>重试来源（唯一 → 最多一个直接子任务）</td></tr>
+<tr><td>src_lang</td><td>varchar16</td><td>否</td><td>—</td><td></td><td>原文语言（首版 en）</td></tr>
+<tr><td>tgt_lang</td><td>varchar16</td><td>否</td><td>—</td><td></td><td>目标语言（首版 zh）</td></tr>
+<tr><td>svc_key</td><td>varchar64</td><td>否</td><td>—</td><td></td><td>翻译服务标识（快照，必填）</td></tr>
+<tr><td>svc_name</td><td>varchar128</td><td>是</td><td>—</td><td></td><td>服务名（持久化展示快照）</td></tr>
+<tr><td>model_key</td><td>varchar64</td><td>是</td><td>—</td><td></td><td>模型标识（按服务能力可空）</td></tr>
+<tr><td>model_name</td><td>varchar128</td><td>是</td><td>—</td><td></td><td>模型名（持久化展示快照）</td></tr>
+<tr><td>style_key</td><td>varchar64</td><td>否</td><td>—</td><td></td><td>风格标识（快照，必填）</td></tr>
+<tr><td>style_name</td><td>varchar128</td><td>是</td><td>—</td><td></td><td>风格名（持久化展示快照）</td></tr>
+<tr><td>status</td><td>varchar16</td><td>否</td><td>'pending'</td><td>IX</td><td>pending/running/done/failed（done/failed 不可变终态；状态列建索引支撑队列筛选）</td></tr>
+<tr><td>stage</td><td>varchar16</td><td>是</td><td>—</td><td></td><td>extract/align/translate/layout/export（持久化待定）</td></tr>
+<tr><td>fail_reason</td><td>varchar255</td><td>是</td><td>—</td><td></td><td>失败原因（failed 时非空；任务级失败）</td></tr>
+<tr><td>total_units</td><td>int</td><td>否</td><td>0</td><td></td><td>单元总数（align 确定）</td></tr>
+<tr><td>done_units</td><td>int</td><td>否</td><td>0</td><td></td><td>已终态单元数（translated + failed）</td></tr>
+<tr><td>failed_units</td><td>int</td><td>否</td><td>0</td><td></td><td>失败单元数（保留原文；单元级失败，不使任务 failed）</td></tr>
+<tr><td>completion_key</td><td>varchar64</td><td>是</td><td>—</td><td>UK</td><td>完成回调幂等键（可选）</td></tr>
+<tr><td>created_at / started_at / finished_at / updated_at</td><td>datetime6</td><td>created/updated 否；started/finished 是</td><td>—</td><td></td><td>时间戳 UTC</td></tr>
+</tbody></table>
+<h2>chapter 章节 ✍</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>章节标识</td></tr>
+<tr><td>task_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, UK(含)</td><td>归属任务（NOT NULL：每章必属一任务）</td></tr>
+<tr><td>seq_no</td><td>int</td><td>否</td><td>—</td><td>UK(含)</td><td>章节顺序（≥1）</td></tr>
+<tr><td>title</td><td>varchar255</td><td>是</td><td>—</td><td></td><td>章节标题（无标题归默认章节）</td></tr>
+</tbody></table>
+<h2>paragraph 原段落 ✍</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>段落标识</td></tr>
+<tr><td>chapter_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, UK(含)</td><td>归属章节</td></tr>
+<tr><td>seq_no</td><td>int</td><td>否</td><td>—</td><td>UK(含)</td><td>段落顺序（≥1）</td></tr>
+<tr><td>source_text</td><td>text</td><td>否</td><td>—</td><td></td><td>原段落完整原文</td></tr>
+</tbody></table>
+<h2>translation_unit 翻译单元 ✍</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>单元标识</td></tr>
+<tr><td>paragraph_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, UK(含)</td><td>归属段落</td></tr>
+<tr><td>seq_no</td><td>int</td><td>否</td><td>—</td><td>UK(含)</td><td>单元顺序（≥1，失败不使邻位错序）</td></tr>
+<tr><td>source_text</td><td>text</td><td>否</td><td>—</td><td></td><td>单元原文</td></tr>
+<tr><td>target_text</td><td>text</td><td>是</td><td>—</td><td></td><td>译文；失败回退原文</td></tr>
+<tr><td>status</td><td>varchar16</td><td>否</td><td>'pending'</td><td></td><td>pending/translated/failed（条件更新；failed=单元级失败）</td></tr>
+<tr><td>retry_count</td><td>int</td><td>否</td><td>0</td><td></td><td>重试次数（≥0）</td></tr>
+</tbody></table>
+<h2>book 书籍成果 ✍</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>书标识</td></tr>
+<tr><td>owner_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>属主（派生自 task.owner_id）</td></tr>
+<tr><td>task_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, UK</td><td>来源任务（幂等入库）</td></tr>
+<tr><td>name</td><td>varchar255</td><td>否</td><td>—</td><td></td><td>书名快照（无唯一，同名可分别成书）</td></tr>
+<tr><td>src_lang / tgt_lang</td><td>varchar16</td><td>否</td><td>—</td><td></td><td>语言对快照</td></tr>
+<tr><td>svc_name / model_name / style_name</td><td>varchar128</td><td>是</td><td>—</td><td></td><td>配置快照（持久化展示快照）</td></tr>
+<tr><td>status</td><td>varchar16</td><td>否</td><td>'active'</td><td></td><td>active/blocked/removed（⬜ M2 计划扩展列，审核处置落点）</td></tr>
+<tr><td>failed_units</td><td>int</td><td>否</td><td>0</td><td></td><td>失败单元数快照（≥0 CHECK）</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>成书时间 UTC</td></tr>
+</tbody></table>
+<h2>book_file 成果文件 ✍</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>文件记录标识</td></tr>
+<tr><td>book_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, UK(含)</td><td>归属书籍</td></tr>
+<tr><td>format</td><td>varchar16</td><td>否</td><td>—</td><td>UK(含)</td><td>epub/pdf（首版 epub）</td></tr>
+<tr><td>storage_ref</td><td>varchar512</td><td>否</td><td>—</td><td></td><td>存储引用（不暴露前端）</td></tr>
+<tr><td>size_bytes</td><td>bigint</td><td>是</td><td>—</td><td></td><td>大小（可空；非空时 ≥0 CHECK）</td></tr>
+<tr><td>sha256</td><td>char64</td><td>是</td><td>—</td><td></td><td>摘要</td></tr>
+<tr><td>generated_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>生成时间 UTC</td></tr>
+</tbody></table>
+<h2>report 举报/审核事项 ⬜（计划扩展 M2）</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>举报标识</td></tr>
+<tr><td>reporter_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>举报人</td></tr>
+<tr><td>reported_user_id</td><td>varchar36</td><td>是</td><td>—</td><td>FK, IX</td><td>被举报用户（举报对象=用户时非空）</td></tr>
+<tr><td>book_id</td><td>varchar36</td><td>是</td><td>—</td><td>FK, IX</td><td>被举报内容/书籍（举报对象=书籍时非空）</td></tr>
+<tr><td>reason</td><td>varchar255</td><td>否</td><td>—</td><td></td><td>举报原因</td></tr>
+<tr><td>status</td><td>varchar16</td><td>否</td><td>'pending'</td><td>IX</td><td>pending/under_review/resolved/dismissed（pending/under_review 即审核队列）</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>举报时间 UTC</td></tr>
+</tbody></table>
+<blockquote>承载方式：<strong>状态实体</strong>（可受控状态更新，非 append-only）。举报对象「用户或书籍二选一」（<code>chk_report_target</code>：<code>reported_user_id</code>/<code>book_id</code> 恰一非空，拒绝无对象/歧义对象）。「审核事项」= report 的队列态视图，不单独建表。</blockquote>
+<h2>disposition 处置记录 ⬜（计划扩展 M2）</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>处置标识</td></tr>
+<tr><td>report_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>被处置举报</td></tr>
+<tr><td>actor_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>处置管理员</td></tr>
+<tr><td>action</td><td>varchar16</td><td>否</td><td>—</td><td></td><td>approve/reject/block/delete（通过/驳回/屏蔽/删除）</td></tr>
+<tr><td>note</td><td>varchar512</td><td>是</td><td>—</td><td></td><td>处置说明</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>处置时间 UTC</td></tr>
+</tbody></table>
+<blockquote>承载方式：事件记录（<strong>append-only，不可改</strong>），对应 FR-15「处理记录」。处置落点（服务端在写 disposition 的同一事务内应用，非仅追加记录即生效）：<code>block/delete</code> + 用户 → <code>user.status='disabled'</code>；<code>block/delete</code> + 书籍 → <code>book.status='blocked'/'removed'</code>（逻辑移除，不物理删除）；<code>approve/reject</code> → 仅推进 <code>report.status</code>。</blockquote>
+<h2>audit_log 管理留痕（含私有内容访问）⬜（计划扩展 M2）</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>留痕标识</td></tr>
+<tr><td>actor_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX</td><td>操作者（管理员）</td></tr>
+<tr><td>report_id</td><td>varchar36</td><td>是</td><td>—</td><td>FK, IX</td><td>审核上下文（结构化关联；无审核上下文的拒绝日志为空）</td></tr>
+<tr><td>action</td><td>varchar64</td><td>否</td><td>—</td><td></td><td>动作（view_private_file / access_denied 等）</td></tr>
+<tr><td>target_type</td><td>varchar32</td><td>否</td><td>—</td><td>IX(含)</td><td>目标类型（upload_file/book/report，多态，不设 FK）</td></tr>
+<tr><td>target_id</td><td>varchar36</td><td>否</td><td>—</td><td>IX(含)</td><td>目标标识</td></tr>
+<tr><td>detail</td><td>varchar512</td><td>是</td><td>—</td><td></td><td>附加说明（不承载结构化关联）</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>发生时间 UTC</td></tr>
+</tbody></table>
+<blockquote>承载方式：事件记录（<strong>append-only</strong>）。target 多态不设外键（留痕对象可能已删除）；审核上下文用 <code>report_id</code> 结构化关联（成功查看私有内容须能追溯具体审核事项；无上下文拒绝日志为空）。</blockquote>
+<h2>bookmark 书签 ⬜（计划扩展 M4，FR-12）</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>书签标识</td></tr>
+<tr><td>user_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX(含)</td><td>归属用户</td></tr>
+<tr><td>book_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, IX(含)</td><td>书籍（直接父引用，列表/归属过滤）</td></tr>
+<tr><td>paragraph_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK</td><td>书签所在段落（精确锚点）</td></tr>
+<tr><td>note</td><td>varchar255</td><td>是</td><td>—</td><td></td><td>书签备注</td></tr>
+<tr><td>created_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>添加时间 UTC</td></tr>
+</tbody></table>
+<blockquote>承载方式：关联实体（多值）。<code>book_id</code> 可由 paragraph→chapter→task→book 推导，此处为必要冗余。服务端一致性（普通外键不足以保证）：写入时校验 ① 用户有权访问该书（<code>book.owner_id == user.id</code> 或管理员）；② 段落确属该书（<code>paragraph.chapter.task_id == book.task_id</code>）。</blockquote>
+<h2>reading_progress 阅读位置 ⬜（计划扩展 M4，FR-13）</h2>
+<table>
+<thead><tr><th>字段</th><th>类型</th><th>空</th><th>默认</th><th>键</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>id</td><td>varchar36</td><td>否</td><td>—</td><td>PK</td><td>进度标识</td></tr>
+<tr><td>user_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, UK(含)</td><td>归属用户</td></tr>
+<tr><td>book_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK, UK(含)</td><td>书籍</td></tr>
+<tr><td>paragraph_id</td><td>varchar36</td><td>否</td><td>—</td><td>FK</td><td>最后阅读到的段落</td></tr>
+<tr><td>updated_at</td><td>datetime6</td><td>否</td><td>—</td><td></td><td>最近阅读时间 UTC</td></tr>
+</tbody></table>
+<blockquote>承载方式：关联实体，每人每书一行（<code>UK(user_id, book_id)</code>，upsert）。服务端一致性同 bookmark：用户有权访问该书 + 段落经 chapter/task 确属该书。</blockquote>
+<h2>状态合法值与转换</h2>
+<ul><li><code>user.role</code>：<code>user</code> / <code>admin</code>（应用层校验，服务端判定权限）。</li><li><code>user.status</code>：<code>active</code> / <code>disabled</code>（M2；停用后登录与会话失效，不物理删除）。</li><li><code>user_session.session_type</code>：<code>user</code> / <code>admin</code>；<code>revoked_at</code> 非空即失效。</li><li><code>task.status</code>：<code>pending → running → done|failed</code>；<code>done</code>/<code>failed</code> 为不可变终态；重试 = 新建 task（旧 failed 不变）。</li><li><code>task.stage</code>：<code>extract → align → translate → layout → export</code>（running 内推进）。</li><li><code>translation_unit.status</code>：<code>pending → translated|failed</code>（条件更新，不回退；failed 为单元级失败）。</li><li><code>book.status</code>：<code>active</code> / <code>blocked</code> / <code>removed</code>（M2；屏蔽/逻辑移除为审核处置落点，不物理删除）。</li><li><code>book_file.format</code>：<code>epub</code>（首版）/ <code>pdf</code>（后续里程碑）。</li><li><code>report.status</code>：<code>pending → under_review → resolved|dismissed</code>（pending/under_review 即审核队列；可受控更新，非 append-only）。</li><li><code>disposition.action</code>：<code>approve</code> / <code>reject</code> / <code>block</code> / <code>delete</code>（落点见 disposition 承载方式说明）。</li></ul>
+<h2>删除规则与索引</h2>
+<ul><li><strong>外键删除规则</strong>：全库外键默认 <code>RESTRICT</code>（不 <code>ON DELETE CASCADE</code>）。用户不物理删除（用 <code>user.status=disabled</code> 停用）；任务/书/章节在其有结构或成果子行时不得删除；留痕/举报/处置默认保留（append-only，可追溯）。</li><li><strong>必要索引</strong>：所有外键列均建索引（列表/校验/联查）；状态列（<code>task.status</code>、<code>report.status</code>）建索引支撑队列筛选；复合唯一键（<code>chapter(task_id,seq_no)</code>、<code>paragraph(chapter_id,seq_no)</code>、<code>translation_unit(paragraph_id,seq_no)</code>、<code>book_file(book_id,format)</code>、<code>reading_progress(user_id,book_id)</code>）兼作保序与幂等。</li><li><strong>数值约束</strong>：<code>size_bytes ≥ 0</code>（upload_file 非空、book_file 可空时）；<code>seq_no ≥ 1</code>；<code>retry_count ≥ 0</code>；<code>book.failed_units ≥ 0</code>；<code>task</code> 计数器 <code>0 ≤ failed_units ≤ done_units ≤ total_units</code>（<code>total_units/done_units/failed_units</code> 均 ≥0，已落 CHECK，见 schema.sql）。</li></ul>
+<p class="note">本文档由对应 Markdown 用 scripts/md2html.py 生成；原始 Markdown 为权威源，可下载/直读。</p>
+</main></body></html>

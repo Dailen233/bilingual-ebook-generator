@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据库设计说明</title>
+<style>
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;color:#1c3544;background:#f7f5ed;margin:0;line-height:1.65}
+main{max-width:980px;margin:0 auto;padding:24px 20px 60px}
+h1{border-bottom:2px solid #357362;padding-bottom:8px;font-size:24px}
+h2{border-left:4px solid #357362;padding-left:10px;margin-top:30px;font-size:19px}
+h3{font-size:15px;color:#9c731f}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:10px 0}
+th,td{border:1px solid #d8e0dd;padding:6px 10px;text-align:left;vertical-align:top}
+th{background:#eef3f0}
+code{background:#eef3f0;padding:1px 5px;border-radius:4px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+blockquote{border-left:4px solid #d8e0dd;margin:10px 0;padding:6px 14px;color:#5f7078;background:#fffef9}
+pre{background:#f0ede3;padding:12px;border-radius:8px;overflow:auto}
+.note{font-size:12.5px;color:#5f7078;border-top:1px solid #d8e0dd;margin-top:32px;padding-top:10px}
+</style>
+</head>
+<body><main>
+<h1>数据库设计检查版（目标模型 · MySQL 8.4）</h1>
+<blockquote>本文档是「数据库设计」考核材料，供老师顺序检查。它把既有《数据库逻辑模型草案》从<strong>逻辑层</strong>落到<strong>物理目标模型</strong>，并<strong>与 yiban-api 实际源码/迁移对齐</strong>（截至 2026-10-27 核对）。<br>性质：<strong>目标模型验证稿</strong>，不是运行库迁移；不改写 yiban-api 已验收的 alembic 0001/0002；不对开发库/测试库执行建表。</blockquote>
+<h2>文件导航（按此顺序阅读）</h2>
+<table>
+<thead><tr><th>文件</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><a href="README.md">README.md</a>（本页）</td><td>范围、状态分类、与既有文档关系、差异与待决</td></tr>
+<tr><td><a href="01-er.md">01-er.md</a> / <a href="01-er.mmd">01-er.mmd</a></td><td>ER 图 mermaid 源（网页可直接渲染）+ 关系基数 + 约束摘要</td></tr>
+<tr><td><a href="er.svg">er.svg</a> / <a href="er-overview.svg">er-overview.svg</a></td><td>全字段 / 关键字段概览 ER 图（由 <code>../scripts/render_database_er.py</code> 从 schema.sql 生成，已与 SQL 逐表逐列核对）</td></tr>
+<tr><td><a href="02-字段字典.md">02-字段字典.md</a></td><td>逐表字段字典（类型/空/默认/键/说明）+ 状态合法值 + 删除规则</td></tr>
+<tr><td><a href="03-页面数据对应表.md">03-页面数据对应表.md</a></td><td>页面→实体→写入角色/触发时机→实现状态；持久化/计算/展示</td></tr>
+<tr><td><a href="schema.sql">schema.sql</a></td><td>目标模型设计 SQL（含表/列 COMMENT，MySQL 8.4）</td></tr>
+</tbody></table>
+<h2>范围与实现状态（14 表）</h2>
+<table>
+<thead><tr><th>表</th><th>说明</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td><code>user</code></td><td>用户账号（含管理员角色与启停）</td><td>✅ 已实现（0001）；<code>status/disabled_*</code> 为 ⬜ 计划扩展 M2</td></tr>
+<tr><td><code>user_session</code></td><td>用户会话（JWT jti + 撤销）</td><td>✅ 已实现（alembic 0002）</td></tr>
+<tr><td><code>upload_file</code></td><td>上传文件（私有、属主隔离）</td><td>✍ 本次拟定（对齐 yiban-api 4e3c762，上传方案仍待评审）</td></tr>
+<tr><td><code>task</code></td><td>任务 + 配置快照 + 进度计数</td><td>✍ 本次拟定</td></tr>
+<tr><td><code>chapter</code> / <code>paragraph</code> / <code>translation_unit</code></td><td>章节 / 段落 / 翻译单元</td><td>✍ 本次拟定</td></tr>
+<tr><td><code>book</code> / <code>book_file</code></td><td>书籍成果 + 文件记录</td><td>✍ 本次拟定</td></tr>
+<tr><td><code>report</code> / <code>disposition</code> / <code>audit_log</code></td><td>举报审核 + 处置记录 + 管理留痕</td><td>⬜ 计划扩展（M2）</td></tr>
+<tr><td><code>bookmark</code> / <code>reading_progress</code></td><td>书签 + 阅读位置/继续阅读</td><td>⬜ 计划扩展（M4）</td></tr>
+</tbody></table>
+<ul><li><strong>已实现</strong>：以 yiban-api <code>models/user.py</code>、<code>models/user_session.py</code>、<code>alembic/versions/0001</code>、<code>0002</code> 为准，本设计与其逐列一致；<code>user.status/disabled_reason/disabled_at</code> 为后续里程碑新增列，<strong>不标为已实现</strong>。</li><li><strong>本次拟定</strong>：依据已确认需求（FR-01~16、G11、NFR-03）与 v4 原型流程形成；落库前需经评审与迁移批次。</li><li><strong>计划扩展</strong>：<code>report</code>/<code>disposition</code>/<code>audit_log</code>（M2 管理端）、<code>bookmark</code>/<code>reading_progress</code>（M4 阅读体验）、<code>user.status/disabled_*</code> 与 <code>book.status</code>（M2）——均为后续里程碑目标设计；承载方式见 02-字段字典（事件记录 / 关联实体），<strong>资源用量由聚合查询承载、不单独建表</strong>（待确认展示口径）。</li></ul>
+<h2>与既有文档的关系（相互引用）</h2>
+<table>
+<thead><tr><th>既有文档</th><th>关系</th></tr></thead>
+<tbody>
+<tr><td>需求分析与设计文档说明.md §3.5 / FR-01~16</td><td>需求来源与范围依据（FR-12/13 阅读、FR-15 管理端）</td></tr>
+<tr><td>数据库逻辑模型草案.md</td><td>逻辑模型原件；本文档是其物理目标模型落地，逻辑关系与唯一约束保持一致</td></tr>
+<tr><td>任务状态机与进度口径草案.md</td><td><code>task.status/stage</code> 与计数语义来源（done 判定、重试=新建 task、单元级 vs 任务级失败）</td></tr>
+<tr><td>任务接口契约草案.md / 书库与成果接口契约草案.md</td><td>字段与读写口径来源（属主校验、进度展示、下载条件）</td></tr>
+</tbody></table>
+<h2>与既有草案的差异与推荐修订（记录，不擅自改已确认需求）</h2>
+<blockquote>以下差异来自「逻辑草案 → 物理目标模型」的落地，以及「真实后端已实现 / 上传方案待评审」的对照；均已标注依据，<strong>不悄悄改动需求文档</strong>。</blockquote>
+<table>
+<thead><tr><th>#</th><th>差异点</th><th>既有表述</th><th>目标模型</th><th>依据 / 推荐</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>主键类型</td><td>逻辑草案 <code>id string PK</code>（自增/UUID 待决）</td><td><code>VARCHAR(36)</code> UUID 字符串</td><td>yiban-api <code>user</code> 已用 UUID；推荐其余表一致</td></tr>
+<tr><td>2</td><td>枚举落地</td><td>逻辑草案 <code>enum('user','admin')</code> 等</td><td><code>VARCHAR(16)</code> + 应用层校验</td><td>yiban-api 决策：避免 MySQL ENUM 的 ALTER 成本</td></tr>
+<tr><td>3</td><td>会话表</td><td>逻辑草案未含会话表</td><td>新增 <code>user_session</code></td><td>yiban-api 0002 已实现；补齐双端会话</td></tr>
+<tr><td>4</td><td>时间类型</td><td>逻辑草案 <code>timestamp</code></td><td><code>DATETIME(6)</code> 无时区 UTC</td><td>yiban-api <code>models/types.py</code> 约定</td></tr>
+<tr><td>5</td><td><code>stage</code>/<code>fail_reason</code></td><td>逻辑草案标「建议增补/待决」</td><td>暂列 <code>stage</code>/<code>fail_reason</code> 字段</td><td>仍待确认是否首版持久化（状态机草案 §8）</td></tr>
+<tr><td>6</td><td>软删除</td><td>逻辑草案 §7.12 待决</td><td>不应用（<code>user</code> 未用 SoftDeleteMixin）</td><td>保留待决，不预加 <code>is_deleted</code></td></tr>
+<tr><td>7</td><td><code>upload_file</code> 字段口径</td><td>storage_ref 512 且无唯一、sha256 可空、ext 无点约定</td><td><code>storage_ref</code> VARCHAR(255) UNIQUE、<code>sha256</code> NOT NULL（不加唯一）、<code>ext</code> 小写含点 ".txt"</td><td><strong>对齐 yiban-api 4e3c762</strong>（上传方案，仍待评审）；<code>size_bytes</code> 用 <code>BIGINT</code>（4e3c762 用 BIGINT，与本稿一致）</td></tr>
+<tr><td>8</td><td>管理/阅读扩展</td><td>逻辑草案未覆盖</td><td>新增 <code>report</code>/<code>disposition</code>/<code>audit_log</code>/<code>bookmark</code>/<code>reading_progress</code> + <code>user.status</code></td><td>FR-12/13/15、G11；M2/M4 计划扩展，非首版</td></tr>
+</tbody></table>
+<h2>关键约束（与状态机/接口草案一致，详见 01/02）</h2>
+<ul><li>属主一致：<code>task.owner_id == upload_file.owner_id</code>、<code>book.owner_id == task.owner_id</code>（服务端强制，非 FK 自动保证）。</li><li>幂等入库：<code>book.task_id</code> 唯一；<code>translation_unit(paragraph_id,seq_no)</code> 唯一；<code>book_file(book_id,format)</code> 唯一（防重复行，不解决物理文件一致性）。</li><li>重试：<code>task.retry_of_task_id</code> 唯一 → 一个 failed task 最多一个直接子任务；重试=新建 task。</li><li>计数：<code>0 ≤ failed_units ≤ done_units ≤ total_units</code>（<code>total_units/done_units/failed_units</code> 均 ≥0，已落 CHECK）；<code>book.failed_units ≥ 0</code>；<code>size_bytes ≥ 0</code>；单元级失败保留原文、不使任务 failed。</li><li>完成顺序：成果文件就绪后同一事务内 <code>book → book_file → task.status=done</code>，不先标 done 再补记录。</li><li>删除规则：外键默认 <code>RESTRICT</code>；用户 <code>status=disabled</code> 停用、书籍 <code>status=blocked/removed</code> 逻辑移除（不物理删除）；<code>disposition</code>/<code>audit_log</code> append-only，<code>report</code> 为可受控状态更新的状态实体。</li><li>举报对象：<code>report</code> 用户或书籍二选一（<code>chk_report_target</code> 恰一非空）。</li><li>处置落点：<code>disposition.action</code> block/delete 同事务落到 <code>user.status='disabled'</code> 或 <code>book.status='blocked/removed'</code>；approve/reject 仅推进 <code>report.status</code>。</li><li>审核留痕：<code>audit_log.report_id</code> 结构化关联举报（成功查看私有内容可追溯具体审核事项）；无上下文拒绝日志为空。</li><li>书签/阅读位置服务端一致性（外键不足以保证）：用户有权访问该书且段落经 chapter/task 确属该书。</li></ul>
+<h2>待决 / 待技术设计</h2>
+<ol><li>上传方案仍在 yiban-api 分支评审（<code>tasks/upload-foundation-plan.md</code>，4e3c762）；<code>storage_ref/sha256/ext</code> 已对齐，其余随定稿微调（如 20 MiB 上限、是否加 <code>PAYLOAD_TOO_LARGE</code> 响应码）。</li><li><code>stage</code>/<code>fail_reason</code> 是否首版持久化（状态机草案 §8）。</li><li><code>report</code>/<code>disposition</code>/<code>audit_log</code>（M2）与 <code>bookmark</code>/<code>reading_progress</code>（M4）在各自里程碑内的落地批次【待确认】；审核事项已定「不单独建表（report 队列态视图）」、书签锚点已定「段落级」，如需整章书签再评估。</li><li>资源用量展示口径（实时聚合 vs 缓存汇总表）【待确认】。</li><li>物理文件与 <code>book_file</code> 记录的一致性（孤儿文件清理）——属文件存储设计，数据库唯一约束不解决。</li><li>后续在独立设计验证库核验方法（见发布说明），不对开发库/测试库执行本 SQL。</li></ol>
+<p class="note">本文档由对应 Markdown 用 scripts/md2html.py 生成；原始 Markdown 为权威源，可下载/直读。</p>
+</main></body></html>
