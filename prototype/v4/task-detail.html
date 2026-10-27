@@ -143,6 +143,9 @@
     if (t.styleName) parts.push('风格：'+esc(t.styleName));
     return parts.map(function(p){ return '<span class="badge b-muted">'+p+'</span>'; }).join('');
   }
+  function retryBadge(t){
+    return (t && t.retry_of_task_id) ? '<span class="badge b-muted">重试任务 · 原任务 '+esc(t.retry_of_task_id)+'</span>' : '';
+  }
 
   function currentTask(){ return taskId ? V2.getTask(taskId) : V2.getTask(); }
   function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
@@ -172,7 +175,7 @@
     document.getElementById('d-failflag').innerHTML = (t.failedCount > 0)
       ? '<span class="badge b-err"><span class="dot" style="background:var(--err)"></span>含失败单元 × '+t.failedCount+'</span>'
       : '<span class="badge b-ok"><span class="dot" style="background:var(--jade-2)"></span>全部成功</span>';
-    document.getElementById('d-cfg').innerHTML = renderConfig(t);
+    document.getElementById('d-cfg').innerHTML = renderConfig(t) + retryBadge(t);
     document.getElementById('d-cmp').innerHTML = renderCmp();
     var bookId = t.bookId || ('b_' + t.id);
     document.getElementById('d-open').href = 'reader.html?id=' + encodeURIComponent(bookId);
@@ -216,7 +219,7 @@
   function renderRun(t) {
     document.getElementById('r-name').textContent = t.name;
     document.getElementById('r-lang').textContent = t.src + ' → ' + t.tgt;
-    document.getElementById('r-cfg').innerHTML = renderConfig(t);
+    document.getElementById('r-cfg').innerHTML = renderConfig(t) + retryBadge(t);
     showBlock('run-block');
     paintRun(t);
     if (timer) clearInterval(timer);
@@ -237,9 +240,10 @@
     render(currentTask());
   }
   function retry() {
-    // 保留配置，从零开始；不影响其他任务
-    V2.updateTask(taskId, { state:'running', cur:0, total:500, failedCount:0, bookId:null, startedAt:Date.now(), updatedAt:Date.now() });
-    render(currentTask());
+    // 原任务保持 failed；重试新建独立子任务（复制配置，重置进度/时间/成果关联），跳转到新任务详情
+    var child = V2.retryTask(taskId);
+    if (!child) { alert('未找到任务，无法重试。'); return; }
+    location.href = 'task-detail.html?id=' + encodeURIComponent(child.id);
   }
 
   function render(t) {

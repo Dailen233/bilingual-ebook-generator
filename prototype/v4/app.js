@@ -148,6 +148,25 @@
   function getFailedTasks() {
     return readTasks().filter(function (t) { return t.state === 'failed'; });
   }
+  // 重试：原任务保持 failed；新建独立子任务（retry_of_task_id 指向原任务），
+  // 只复制文件/语言/服务/模型/风格配置，进度/时间/成果关联重新初始化。
+  // 同一失败任务重复重试返回已有子任务及其实际状态（不重复创建、不重置）。
+  function retryTask(id) {
+    var arr = readTasks();
+    var orig = null;
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === id) { orig = arr[i]; break; }
+    if (!orig) return null;
+    for (var j = 0; j < arr.length; j++) {
+      if (arr[j].retry_of_task_id === id) return arr[j];
+    }
+    return createTask({
+      retry_of_task_id: id,
+      name: orig.name, src: orig.src, tgt: orig.tgt,
+      service: orig.service, serviceName: orig.serviceName,
+      model: orig.model, modelName: orig.modelName,
+      style: orig.style, styleName: orig.styleName
+    });
+  }
 
   // ---- 进度：按 wall-clock 确定性计算（多标签页重复读取不累加） ----
   function progressOf(t, now) {
@@ -275,6 +294,7 @@
     clearUser: clearUser, clearAdmin: clearAdmin,
     getTasks: readTasks, getTask: getTask, createTask: createTask,
     updateTask: updateTask, getRunningTasks: getRunningTasks, getFailedTasks: getFailedTasks,
+    retryTask: retryTask,
     advanceTasks: advanceTasks, progressOf: progressOf, ensureLibraryBook: ensureLibraryBook,
     DEMO_USER: DEMO_USER, DEMO_ADMIN: DEMO_ADMIN,
     DEMO_UNITS: DEMO_UNITS, demoFailedCount: demoFailedCount,
