@@ -41,7 +41,7 @@
   <div class="wrap">
 
     <div class="sim-bar" style="margin-bottom:16px">
-      <span>◆ 举报/审核为<b>原型模拟</b>示例，不接后端；处置与留痕为演示，非真实安全能力。</span>
+      <span>◆ 举报/审核为<b>后续审核场景预览</b>，使用预置示例记录（A101/A102/A103），不接后端；用户端当前无举报提交流程，处置与留痕为演示，非真实安全能力。</span>
     </div>
     <div class="alert alert-warn" style="margin-bottom:22px">
       <span class="ic">⚠</span>
@@ -121,21 +121,18 @@
       '<div class="alert alert-info" style="margin:14px 0"><span class="ic">🔒</span><span>用户文件内容默认私有。点击查看将<b>写入操作留痕</b>（审核上下文内，P13 设计假设）。</span></div>' +
       '<button class="btn btn-ghost btn-sm" onclick="viewContent(\''+id+'\')">查看文件内容（留痕）</button>' +
       '<div id="rv-content" style="display:none;margin-top:14px;padding:14px;border:1px dashed var(--line);border-radius:10px;background:var(--panel-2);font-size:14px;color:var(--muted)">'+esc(r.snippet)+'</div>' +
-      '<div class="divider">处置</div>' +
-      '<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">' +
-        '<button class="btn btn-ghost btn-sm" onclick="dispose(\''+id+'\',\'通过（内容合规）\')">通过</button>' +
-        '<button class="btn btn-danger btn-sm" onclick="dispose(\''+id+'\',\'驳回/屏蔽\')">驳回 / 屏蔽用户</button>' +
-        '<button class="btn btn-ghost btn-sm" onclick="dispose(\''+id+'\',\'上报\')">上报</button>' +
+      '<div class="divider">处置（规划中）</div>' +
+      '<div style="margin-top:6px;font-size:12px;color:var(--muted)">处置为后续审核场景预览：本原型不维护真实处置状态、不向当事人发送通知；以下按钮仅展示操作含义，已禁用。</div>' +
+      '<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">' +
+        '<button class="btn btn-ghost btn-sm" disabled title="规划中（M2）：驳回举报，报告状态 → dismissed">驳回举报（内容合规）</button>' +
+        '<button class="btn btn-danger btn-sm" disabled title="规划中（M2）：屏蔽目标用户或书籍（与驳回举报含义不同，对象与操作不同）">屏蔽用户 / 书籍</button>' +
+        '<button class="btn btn-ghost btn-sm" disabled title="规划中（M2）：转交更高级别处理">上报</button>' +
       '</div>';
     log('打开审核详情 '+id+'（仅查看元数据，未查看文件内容）');
   }
   function viewContent(id){
     document.getElementById('rv-content').style.display = 'block';
     log('管理员查看了举报 '+id+' 的用户文件内容（原因：举报审核需要）——已留痕');
-  }
-  function dispose(id, act){
-    log('处置举报 '+id+'：'+act+'（已写入处理记录，将通知当事人并说明）');
-    alert('（模拟）已处置 '+id+'：'+act+'。\n真实系统中：处置可追溯、对当事人有可感知状态变化（4.5）；本原型不接后端。');
   }
   if (V2.isAdmin()) document.getElementById('audit-time').textContent = now(); // 未登录管理员已重定向，不初始化
 </script>
