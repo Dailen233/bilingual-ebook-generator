@@ -30,6 +30,7 @@
 - **已实现**：以 yiban-api `models/user.py`、`models/user_session.py`、`alembic/versions/0001`、`0002` 为准，本设计与其逐列一致；`user.status/disabled_reason/disabled_at` 为后续里程碑新增列，**不标为已实现**。
 - **本次拟定**：依据已确认需求（FR-01~16、G11、NFR-03）与 v4 原型流程形成；落库前需经评审与迁移批次。
 - **计划扩展**：`report`/`disposition`/`audit_log`（M2 管理端）、`bookmark`/`reading_progress`（M4 阅读体验）、`user.status/disabled_*` 与 `book.status`（M2）——均为后续里程碑目标设计；承载方式见 02-字段字典（事件记录 / 关联实体），**资源用量由聚合查询承载、不单独建表**（待确认展示口径）。
+- **社区扩展方向（不建表、不覆盖）**：社区发布 / 授权分享仅列为**后续待评估方向**；发布/授权信息应与私有书籍（`book`）与审核状态（`report`/`disposition`）区分，具体模型留后续评审。**本 14 表目标模型不覆盖社区发布/评论/点赞/关注**；个人书库默认私有。
 
 ## 与既有文档的关系（相互引用）
 
